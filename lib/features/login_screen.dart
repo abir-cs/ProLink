@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
 import '../core/button.dart';
 import '../routes/routes.dart';
 
@@ -69,9 +68,10 @@ class _LoginFormState extends State<LoginForm> {
     );
   }
 }
+
+
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -79,10 +79,7 @@ class LoginScreen extends StatelessWidget {
         child: SizedBox(
           width: 400,
           child: Card(
-            elevation: 6,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
+            margin: EdgeInsets.all(10),
             child: const Padding(
               padding: EdgeInsets.all(24),
               child: LoginForm(),
