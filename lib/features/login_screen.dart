@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 import '../core/button.dart';
 import '../routes/routes.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+final userIdProvider = StateProvider<int?>((ref) => null);
+final userRoleProvider = StateProvider<String?>((ref) => null);
 
-class LoginForm extends StatefulWidget {
+
+class LoginForm extends ConsumerStatefulWidget {
   const LoginForm({super.key});
 
   @override
-  State<LoginForm> createState() => _LoginFormState();
+  ConsumerState<LoginForm> createState() => _LoginFormState();
 }
-class _LoginFormState extends State<LoginForm> {
+class _LoginFormState extends ConsumerState<LoginForm> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
@@ -54,13 +60,58 @@ class _LoginFormState extends State<LoginForm> {
 
         CustomButton(
           text: "Login",
-          onPressed: () {
-            if (role == "Admin") {
-              Navigator.pushNamed(context, AppRoutes.admin);
-            } else if (role == "Mentor") {
-              Navigator.pushNamed(context, AppRoutes.mentor);
-            } else {
-              Navigator.pushNamed(context, AppRoutes.intern);
+          onPressed: () async {
+            final email = emailController.text.trim();
+            final password = passwordController.text.trim();
+
+            if (email.isEmpty || password.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Please fill all fields")),
+              );
+              return;
+            }
+
+            try {
+              final response = await http.post(
+                Uri.parse("http://192.168.1.6:3000/login"), // emulator -> localhost
+                headers: {"Content-Type": "application/json"},
+                body: jsonEncode({
+                  "email": email,
+                  "password": password,
+                  "role": role.toLowerCase(), // important
+                }),
+              );
+
+              if (response.statusCode == 200) {
+                final data = jsonDecode(response.body);
+
+                final returnedRole = data["role"];
+                final user = data["user"];
+
+                int userId;
+                if (returnedRole == "admin") {
+                  userId = user["admin_id"];
+                  Navigator.pushNamed(context, AppRoutes.admin);
+                } else if (returnedRole == "mentor") {
+                  userId = user["mentor_id"];
+                  Navigator.pushNamed(context, AppRoutes.mentor);
+                } else {
+                  userId = user["intern_id"];
+                  Navigator.pushNamed(context, AppRoutes.intern);
+                }
+                ref.read(userIdProvider.notifier).state = userId;
+                ref.read(userRoleProvider.notifier).state = returnedRole;
+
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Invalid credentials")),
+                );
+              }
+
+            } catch (e) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Connection error")),
+              );
             }
           },
         )
