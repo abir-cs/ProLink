@@ -8,11 +8,11 @@ class InternsAssignment extends StatelessWidget {
     super.key,
   });
   static List<Intern> interns = [
-    Intern("assets/images/pfp.png", "Abir", "Belhadef", "abir@mail.com", "CS"),
-    Intern("assets/images/pfp.png", "Sara", "Ali", "sara@mail.com", "IS"),
-    Intern("assets/images/pfp.png", "Mohamed", "Amine", "mohamed@mail.com", "AI"),
-    Intern("assets/images/pfp.png", "Yasmine", "Kouider", "yasmine@mail.com", "Cyber Security"),
-    Intern("assets/images/pfp.png", "Karim", "Haddad", "karim@mail.com", "Data Science"),
+    Intern("assets/images/pfp.png", "Abir", "Belhadef", "abir@mail.com"),
+    Intern("assets/images/pfp.png", "Sara", "Ali", "sara@mail.com"),
+    Intern("assets/images/pfp.png", "Mohamed", "Amine", "mohamed@mail.com"),
+    Intern("assets/images/pfp.png", "Yasmine", "Kouider", "yasmine@mail.com"),
+    Intern("assets/images/pfp.png", "Karim", "Haddad", "karim@mail.com"),
   ];
 
   @override
@@ -97,15 +97,7 @@ Widget internValidationRow(Intern intern,BuildContext context) {
                 ],
               ),
             ),
-            Expanded(
-              flex: 2,
-              child: Text(
-                intern.speciality,
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ),
+
             GestureDetector(
               onTap: () {
                 showAssignDialog(context);
