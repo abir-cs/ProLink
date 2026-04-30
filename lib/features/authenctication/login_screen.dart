@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import '../core/button.dart';
-import '../routes/routes.dart';
+import '../../core/button.dart';
+import '../../routes/routes.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-final userIdProvider = StateProvider<int?>((ref) => null);
-final userRoleProvider = StateProvider<String?>((ref) => null);
+import '../providers.dart';
+import 'waiting.dart';
 
 
 class LoginForm extends ConsumerStatefulWidget {
@@ -90,14 +90,26 @@ class _LoginFormState extends ConsumerState<LoginForm> {
 
                 int userId;
                 if (returnedRole == "admin") {
-                  userId = user["admin_id"];
                   Navigator.pushNamed(context, AppRoutes.admin);
+                  userId = user["admin_id"];
                 } else if (returnedRole == "mentor") {
-                  userId = user["mentor_id"];
                   Navigator.pushNamed(context, AppRoutes.mentor);
+                  userId = user["mentor_id"];
                 } else {
+                  final status = user["status"];
                   userId = user["intern_id"];
-                  Navigator.pushNamed(context, AppRoutes.intern);
+                  if (status == "waiting") {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const Waiting()),
+                    );
+                  } else if (status == "accepted") {
+                    Navigator.pushNamed(context, AppRoutes.intern);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Account rejected")),
+                    );
+                  }
                 }
                 ref.read(userIdProvider.notifier).state = userId;
                 ref.read(userRoleProvider.notifier).state = returnedRole;
@@ -127,15 +139,24 @@ class LoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: SizedBox(
-          width: 400,
-          child: Card(
-            margin: EdgeInsets.all(10),
-            child: const Padding(
-              padding: EdgeInsets.all(24),
-              child: LoginForm(),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 400,
+              child: Card(
+                margin: EdgeInsets.all(10),
+                child: const Padding(
+                  padding: EdgeInsets.all(24),
+                  child: LoginForm(),
+                ),
+              ),
             ),
-          ),
+            TextButton(onPressed: (){
+              Navigator.pushNamed(context, AppRoutes.register);
+            }, child: Text("dont have an account ? register as intern"))
+          ],
+
         ),
       ),
     );

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import '../features/login_screen.dart';
+import '../features/authenctication/login_screen.dart';
 import '../features/admin/admin_dashboard.dart';
 import '../features/mentor/mentor_dashboard.dart';
 import '../features/intern/intern_dashboard.dart';
 import '../features/intern/trainingfiles.dart';
 import '../features/intern/assignments.dart';
 import '../features/intern/marks.dart';
+import '../features/authenctication/intern_register.dart';
 
 class AppRoutes {
   static const login = "/";
@@ -15,6 +16,9 @@ class AppRoutes {
   static const tf ='/intern/trainingfiles';
   static const ia ='/intern/assignments';
   static const marks ='/intern/skillmarks';
+  static const register ='/register';
+
+
 
   static Map<String, WidgetBuilder> routes = {
     login: (context) => const LoginScreen(),
@@ -24,6 +28,7 @@ class AppRoutes {
     tf:(context) =>const TrainingFiles(),
     ia:(context) =>const Assignments(),
     marks:(context) =>const Marks(),
+    register:(context) =>const RegisterScreen(),
 
   };
 }
