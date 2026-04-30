@@ -5,12 +5,14 @@ class Intern{
   late String name;
   late String Lname;
   late String email;
+  late String speciality;
 
-  Intern(String a,String b,String c,String g){
+  Intern(String a,String b,String c,String g,String s){
     avatar = a;
     name =b;
     Lname =c;
     email = g;
+    speciality = s;
   }
 }
 

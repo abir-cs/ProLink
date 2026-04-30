@@ -7,9 +7,15 @@ import '../../routes/routes.dart';
 
 class InternDashboard extends StatelessWidget {
   const InternDashboard({super.key});
-  static Intern intern = Intern("assets/images/pfp.png", "abir", "belhadef", "abir@gmail.com");
-  static int totalModules=5;
-  static int completedModules=3;
+  static Intern intern = Intern(
+    "assets/images/pfp.png",
+    "abir",
+    "belhadef",
+    "abir@gmail.com",
+    "CS"
+  );
+  static int totalModules = 5;
+  static int completedModules = 3;
 
   @override
   Widget build(BuildContext context) {
@@ -24,10 +30,7 @@ class InternDashboard extends StatelessWidget {
             SizedBox(height: 20),
             Text(
               "Progress Made",
-              style: TextStyle(
-                  color: AppColors.teal,
-                  fontSize: 25
-              ),
+              style: TextStyle(color: AppColors.teal, fontSize: 25),
             ),
             Row(
               children: List.generate(totalModules, (index) {
@@ -35,8 +38,10 @@ class InternDashboard extends StatelessWidget {
 
                 return Expanded(
                   child: Container(
-
-                    margin: const EdgeInsets.symmetric(vertical: 5 ,horizontal: 1),
+                    margin: const EdgeInsets.symmetric(
+                      vertical: 5,
+                      horizontal: 1,
+                    ),
                     height: 5,
                     decoration: BoxDecoration(
                       color: isCompleted ? AppColors.teal : AppColors.textMuted,
@@ -48,20 +53,17 @@ class InternDashboard extends StatelessWidget {
             ),
             Text(
               "succeeded ${completedModules} training modules out of ${totalModules}",
-              style: TextStyle(
-                color: AppColors.textMuted,
-              ),
+              style: TextStyle(color: AppColors.textMuted),
             ),
-            SizedBox(height: 20,),
+            SizedBox(height: 20),
             Row(
               children: [
                 Expanded(
                   child: GestureDetector(
-                    onTap: (){
+                    onTap: () {
                       showSchedule(context);
                     },
                     child: Container(
-
                       padding: EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         gradient: AppGradients.primary,
@@ -82,35 +84,35 @@ class InternDashboard extends StatelessWidget {
                               color: AppColors.textSecondary,
                             ),
                           ),
-                      SizedBox(height: 12),
-                      Text(
-                        "Shift Schedule",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
+                          SizedBox(height: 12),
+                          Text(
+                            "Shift Schedule",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          Text(
+                            "check them out",
+                            style: TextStyle(
+                              fontSize: 14,
+                              color:
+                                  AppColors.textSecondary, // Beige-like color
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(
-                        "check them out",
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textSecondary, // Beige-like color
-                        ),
-                      ),
-                    ]
-                                    ),
                     ),
                   ),
                 ),
                 SizedBox(width: 20),
                 Expanded(
                   child: GestureDetector(
-                    onTap: (){
+                    onTap: () {
                       Navigator.pushNamed(context, AppRoutes.tf);
                     },
                     child: Container(
-
                       padding: EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: AppColors.cardDark,
@@ -122,37 +124,39 @@ class InternDashboard extends StatelessWidget {
                       ),
 
                       child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                gradient: AppGradients.primary, // Dark navy circle
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.file_copy,
-                                size: 30,
-                                color: AppColors.textSecondary,
-                              ),
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              gradient:
+                                  AppGradients.primary, // Dark navy circle
+                              shape: BoxShape.circle,
                             ),
-                            SizedBox(height: 12),
-                            Text(
-                              "Training Files",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
-                              ),
+                            child: Icon(
+                              Icons.file_copy,
+                              size: 30,
+                              color: AppColors.textSecondary,
                             ),
-                            Text(
-                              "Read",
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: AppColors.textSecondary, // Beige-like color
-                              ),
+                          ),
+                          SizedBox(height: 12),
+                          Text(
+                            "Training Files",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
                             ),
-                          ]
+                          ),
+                          Text(
+                            "Read",
+                            style: TextStyle(
+                              fontSize: 14,
+                              color:
+                                  AppColors.textSecondary, // Beige-like color
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -164,11 +168,10 @@ class InternDashboard extends StatelessWidget {
               children: [
                 Expanded(
                   child: GestureDetector(
-                    onTap: (){
+                    onTap: () {
                       Navigator.pushNamed(context, AppRoutes.ia);
                     },
                     child: Container(
-
                       padding: EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: AppColors.cardDark,
@@ -180,37 +183,39 @@ class InternDashboard extends StatelessWidget {
                       ),
 
                       child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                gradient: AppGradients.primary, // Dark navy circle
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.assignment,
-                                size: 30,
-                                color: AppColors.textSecondary,
-                              ),
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              gradient:
+                                  AppGradients.primary, // Dark navy circle
+                              shape: BoxShape.circle,
                             ),
-                            SizedBox(height: 12),
-                            Text(
-                              "Assignments",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
-                              ),
+                            child: Icon(
+                              Icons.assignment,
+                              size: 30,
+                              color: AppColors.textSecondary,
                             ),
-                            Text(
-                              "what to do + export",
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: AppColors.textSecondary, // Beige-like color
-                              ),
+                          ),
+                          SizedBox(height: 12),
+                          Text(
+                            "Assignments",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
                             ),
-                          ]
+                          ),
+                          Text(
+                            "what to do + export",
+                            style: TextStyle(
+                              fontSize: 14,
+                              color:
+                                  AppColors.textSecondary, // Beige-like color
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -218,58 +223,56 @@ class InternDashboard extends StatelessWidget {
                 SizedBox(width: 20),
                 Expanded(
                   child: GestureDetector(
-                    onTap: (){
+                    onTap: () {
                       Navigator.pushNamed(context, AppRoutes.marks);
                     },
                     child: Container(
-
                       padding: EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         gradient: AppGradients.teal,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: AppColors.cardDark, // Dark navy circle
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.checklist_rtl_sharp,
-                                size: 30,
-                                color: AppColors.teal,
-                              ),
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: AppColors.cardDark, // Dark navy circle
+                              shape: BoxShape.circle,
                             ),
-                            SizedBox(height: 12),
-                            Text(
-                              "Skill marks",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.background,
-                              ),
+                            child: Icon(
+                              Icons.checklist_rtl_sharp,
+                              size: 30,
+                              color: AppColors.teal,
                             ),
-                            Text(
-                              "check them out",
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: AppColors.teal, // Beige-like color
-                              ),
+                          ),
+                          SizedBox(height: 12),
+                          Text(
+                            "Skill marks",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.background,
                             ),
-                          ]
+                          ),
+                          Text(
+                            "check them out",
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppColors.teal, // Beige-like color
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
               ],
             ),
-
-          ]
+          ],
         ),
-      )
+      ),
     );
   }
 }
