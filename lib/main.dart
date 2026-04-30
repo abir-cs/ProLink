@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'core/app_theme.dart';
 import 'routes/routes.dart';
-
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 void main() {
-  runApp(const ProLinkApp());
+  runApp(ProviderScope(child: const ProLinkApp()));
 }
 
 class ProLinkApp extends StatelessWidget {
