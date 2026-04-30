@@ -15,7 +15,7 @@ const pool = new Pool({
   user: "postgres",
   host: "localhost",
   database: "prolink",
-  password: "yourpass",
+  password: "7bsouna1",
   port: 5432,
 });
 
@@ -153,42 +153,114 @@ app.get("/departments", async (req, res) => {
   res.json(result.rows);
 });
 
-//get interns assigned to mentor
+
+//---------------------- mentor API calls ------------------------
+//get interns
 app.get("/mentor/:id/interns", async (req, res) => {
   const { id } = req.params;
 
-  const result = await pool.query(
-    "SELECT * FROM interns WHERE mentor_id=$1",
-    [id]
-  );
+  try {
+    const result = await pool.query(
+      `SELECT
+        intern_id,
+        fname,
+        lname,
+        email,
+        picture_url
+       FROM interns
+       WHERE mentor_id = $1`,
+      [id]
+    );
 
-  res.json(result.rows);
+    res.json(result.rows);
+
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
+//get skills
+app.get("/intern/:id/skills", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT s.skill_id, s.skill
+       FROM interns i
+       JOIN skills s ON i.department_id = s.department_id
+       WHERE i.intern_id = $1`,
+      [id]
+    );
+
+    res.json(result.rows);
+
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
 //upload training models
-app.post("/training", async (req, res) => {
-  const { mentor_id, file_url } = req.body;
+const trainingStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/training/");
+  },
+  filename: (req, file, cb) => {
+    cb(null, "module_" + Date.now() + path.extname(file.originalname));
+  }
+});
+const uploadTraining = multer({
+  storage: trainingStorage,
+  fileFilter: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (ext === ".pdf") cb(null, true);
+    else cb(new Error("Only PDF files allowed"), false);
+  }
+});
+app.post("/training", uploadTraining.single("file"), async (req, res) => {
+  const { mentor_id, name } = req.body;
 
-  const result = await pool.query(
-    `INSERT INTO training_modules (mentor_id, file_url)
-     VALUES ($1,$2) RETURNING *`,
-    [mentor_id, file_url]
-  );
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
 
-  res.json(result.rows[0]);
+    const filePath = req.file.path;
+
+    const result = await pool.query(
+      `INSERT INTO training_modules (mentor_id, name, file_url)
+       VALUES ($1,$2,$3) RETURNING *`,
+      [mentor_id, name, filePath]
+    );
+
+    res.json(result.rows[0]);
+
+  } catch (err) {
+    console.error("TRAINING ERROR:", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 //add marks
 app.post("/marks", async (req, res) => {
   const { intern_id, skill_id, mark } = req.body;
 
-  const result = await pool.query(
-    `INSERT INTO marks (intern_id, skill_id, mark)
-     VALUES ($1,$2,$3) RETURNING *`,
-    [intern_id, skill_id, mark]
-  );
+  try {
+    const result = await pool.query(
+      `INSERT INTO marks (intern_id, skill_id, mark)
+       VALUES ($1,$2,$3)
+       ON CONFLICT (intern_id, skill_id)
+       DO UPDATE SET mark = EXCLUDED.mark
+       RETURNING *`,
+      [intern_id, skill_id, mark]
+    );
 
-  res.json(result.rows[0]);
+    res.json(result.rows[0]);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 //attendance
@@ -204,6 +276,8 @@ app.post("/attendance", async (req, res) => {
   res.json(result.rows[0]);
 });
 
+
+//-------------------------Intern API Calls -----------------------------
 //fetch intern
 app.get("/intern/:id", async (req, res) => {
   const { id } = req.params;
@@ -235,6 +309,7 @@ app.get("/intern/:id", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
 //upload intern profile image
 app.put("/intern/:id/picture", uploadProfile.single("picture"), async (req, res) => {
   const { id } = req.params;
@@ -273,19 +348,36 @@ app.get("/training/:mentor_id", async (req, res) => {
 });
 
 //get marks
-app.get("/intern/:id/marks", async (req, res) => {
+app.get("/intern/:id/skills-with-marks", async (req, res) => {
   const { id } = req.params;
 
-  const result = await pool.query(
-    `SELECT m.mark, s.skill
-     FROM marks m
-     JOIN skills s ON m.skill_id = s.skill_id
-     WHERE m.intern_id=$1`,
-    [id]
-  );
+  try {
+    const result = await pool.query(
+      `SELECT
+        s.skill_id,
+        s.skill,
+        COALESCE(m.mark, 0) AS mark
+       FROM interns i
+       JOIN skills s
+         ON (s.department_id = i.department_id OR s.department_id IS NULL)
+       LEFT JOIN marks m
+         ON m.skill_id = s.skill_id
+         AND m.intern_id = i.intern_id
+       WHERE i.intern_id = $1`,
 
-  res.json(result.rows);
+      [id]
+    );
+
+    res.json(result.rows);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
 });
+
+
+
 // test connection
 pool.connect()
   .then(() => console.log("✅ PostgreSQL connected"))
