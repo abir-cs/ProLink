@@ -4,8 +4,73 @@ import '../../routes/routes.dart';
 import '../intern/workid.dart';
 import 'intern_service.dart';
 
-class AdminDashboard extends StatelessWidget {
+class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
+
+  @override
+  State<AdminDashboard> createState() => _AdminDashboardState();
+}
+
+class _AdminDashboardState extends State<AdminDashboard> {
+  String query = "";
+
+  List<Intern> validate = [];
+  List<Intern> assign = [];
+  List<SearchResult> results = [];
+
+  @override
+  void initState() {
+    super.initState();
+    loadData();
+  }
+
+  Future<void> loadData() async {
+    validate = await InternService.fetchPendingInterns();
+    assign = await InternService.fetchInternsnotAssignedToMentor();
+    setState(() {});
+  }
+
+  List<SearchResult> searchInterns(
+    String query,
+    List<Intern> validate,
+    List<Intern> assign,
+  ) {
+    if (query.isEmpty) return [];
+
+    final q = query.toLowerCase();
+    List<SearchResult> results = [];
+
+    for (final i in validate) {
+      if ("${i.name} ${i.lname}".toLowerCase().contains(q)) {
+        results.add(SearchResult(intern: i, source: "validate"));
+      }
+    }
+
+    for (final i in assign) {
+      if ("${i.name} ${i.lname}".toLowerCase().contains(q)) {
+        results.add(SearchResult(intern: i, source: "assign"));
+      }
+    }
+
+    return results;
+  }
+
+  void openIntern(SearchResult item) {
+    if (item.source == "validate") {
+      Navigator.pushNamed(
+        context,
+        AppRoutes.iv,
+        arguments: item.intern,
+      );
+    } else {
+      Navigator.pushNamed(
+        context,
+        AppRoutes.isa,
+        arguments: item.intern,
+      );
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -13,27 +78,65 @@ class AdminDashboard extends StatelessWidget {
       appBar: AppBar(title: const Text("Admin Dashboard")),
       body: Padding(
         padding: const EdgeInsets.all(20),
-        child: Column(
+        child: Stack(
           children: [
-            _SearchBar(),
+            Column(
+              children: [
+                _SearchBar(
+                  onChanged: (value) {
+                    setState(() {
+                      query = value;
+                      results = searchInterns(query, validate, assign);
+                    });
+                  },
+                ),
 
-            const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-            _UploadButton(),
+                _UploadButton(),
 
-            const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: const [
-                    PendingInternsCard(),
-                    SizedBox(height: 20),
-                    InternsToAssignCard(),
-                  ],
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: const [
+                        PendingInternsCard(),
+                        SizedBox(height: 20),
+                        InternsToAssignCard(),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (query.isNotEmpty && results.isNotEmpty)
+              Positioned(
+                top: 70, // adjust depending on search bar position
+                left: 20,
+                right: 20,
+                child: Material(
+                  elevation: 10,
+                  borderRadius: BorderRadius.circular(12),
+                  color: AppColors.cardDark,
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: results.length,
+                    itemBuilder: (context, index) {
+                      final item = results[index];
+
+                      return ListTile(
+                        title: Text(
+                          "${item.intern.name} ${item.intern.lname}",
+                          style: const TextStyle(color: AppColors.textPrimary),
+                        ),
+                        subtitle: Text(item.source),
+                        onTap: () => openIntern(item),
+                      );
+                    },
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),
@@ -41,28 +144,29 @@ class AdminDashboard extends StatelessWidget {
   }
 }
 
+class SearchResult {
+  final Intern intern;
+  final String source; // "validate" or "assign"
+
+  SearchResult({required this.intern, required this.source});
+}
+
 class _SearchBar extends StatelessWidget {
+  final Function(String) onChanged;
+
+  const _SearchBar({required this.onChanged});
+
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 50,
-      child: TextField(
-        style: TextStyle(color: AppColors.textPrimary),
-        decoration: InputDecoration(
-          hintText: "Search...",
-          hintStyle: TextStyle(color: AppColors.textSecondary),
-          prefixIcon: Icon(Icons.search, color: AppColors.textSecondary),
-          filled: true,
-          fillColor: AppColors.cardDark,
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30),
-            borderSide: BorderSide(color: AppColors.border),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30),
-            borderSide: BorderSide(color: AppColors.primarySoft),
-          ),
-        ),
+    return TextField(
+      onChanged: onChanged,
+      style: const TextStyle(color: AppColors.textPrimary),
+      decoration: InputDecoration(
+        hintText: "Search interns...",
+        prefixIcon: const Icon(Icons.search),
+        filled: true,
+        fillColor: AppColors.cardDark,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
       ),
     );
   }

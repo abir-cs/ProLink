@@ -4,6 +4,7 @@ import '../intern/workid.dart';
 import '../../core/app_colors.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+
 class InternsAssignment extends StatefulWidget {
   const InternsAssignment({super.key});
 
@@ -12,6 +13,19 @@ class InternsAssignment extends StatefulWidget {
 }
 
 class _InternsAssignmentState extends State<InternsAssignment> {
+  late ScrollController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
   @override
   Future<List<Intern>> interns =
   InternService.fetchInternsnotAssignedToMentor();
@@ -21,6 +35,9 @@ class _InternsAssignmentState extends State<InternsAssignment> {
     });
   }
   Widget build(BuildContext context) {
+    final Intern? selected =
+    ModalRoute.of(context)!.settings.arguments as Intern?;
+    final ScrollController controller = ScrollController();
     return Scaffold(
       appBar: AppBar(title: Text("Interns to Validate")),
       body: Padding(
