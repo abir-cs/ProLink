@@ -8,6 +8,7 @@ import '../../routes/routes.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers.dart';
 import 'package:http/http.dart' as http;
+
 class InternDashboard extends ConsumerStatefulWidget {
   const InternDashboard({super.key});
 
@@ -29,7 +30,7 @@ class _InternDashboardState extends ConsumerState<InternDashboard> {
 
     try {
       final response = await http.get(
-        Uri.parse("http://192.168.1.6:3000/intern/$userId"),
+        Uri.parse("http://192.168.1.7:3000/intern/$userId"),
       );
 
       if (response.statusCode == 200) {

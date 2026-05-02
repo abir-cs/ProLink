@@ -62,7 +62,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     try {
       var request = http.MultipartRequest(
         "POST",
-        Uri.parse("http://192.168.1.6:3000/register/intern"),
+        Uri.parse("http://192.168.1.7:3000/register/intern"),
       );
 
       request.fields["email"] = email;

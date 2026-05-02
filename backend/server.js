@@ -15,7 +15,7 @@ const pool = new Pool({
   user: "postgres",
   host: "localhost",
   database: "prolink",
-  password: "yourpass",
+  password: "1552006",
   port: 5432,
 });
 
@@ -117,6 +117,14 @@ app.get("/interns/pending", async (req, res) => {
   res.json(result.rows);
 });
 
+//get interns that are not assigned
+app.get("/interns/waitingassignment", async (req, res) => {
+  const result = await pool.query(
+    "SELECT * FROM interns WHERE mentor_id is NULL AND status='accepted'"
+  );
+  res.json(result.rows);
+});
+
 //accept or reject intern
 app.put("/interns/:id/status", async (req, res) => {
   const { id } = req.params;
@@ -127,8 +135,6 @@ app.put("/interns/:id/status", async (req, res) => {
     [status, id]
   );
 
-//
-
   res.json({ message: "Updated" });
 });
 
@@ -138,19 +144,40 @@ app.put("/interns/:id/assign", async (req, res) => {
   const { mentor_id, department_id } = req.body;
 
   await pool.query(
-    `UPDATE interns
-     SET mentor_id=$1, department_id=$2, status='accepted'
-     WHERE intern_id=$3`,
+    "UPDATE interns SET mentor_id=$1, department_id=$2, status='accepted' WHERE intern_id=$3",
     [mentor_id, department_id, id]
   );
 
   res.json({ message: "Intern assigned" });
 });
-
+app.get("/test", (req, res) => {
+  res.send("SERVER WORKS");
+});
 //get departments
 app.get("/departments", async (req, res) => {
   const result = await pool.query("SELECT * FROM departments");
   res.json(result.rows);
+});
+
+//get Mentors
+app.get("/mentors", async (req, res) => {
+  const result = await pool.query("SELECT * FROM mentors");
+  res.json(result.rows);
+});
+
+//get mentors from a specific department
+app.get("/departments/:id/mentors", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      "SELECT * FROM mentors WHERE department_id = $1",
+      [id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch mentors" });
+  }
 });
 
 //get interns assigned to mentor
@@ -259,7 +286,6 @@ app.put("/intern/:id/picture", uploadProfile.single("picture"), async (req, res)
   }
 });
 
-
 //get training modules
 app.get("/training/:mentor_id", async (req, res) => {
   const { mentor_id } = req.params;
@@ -286,6 +312,24 @@ app.get("/intern/:id/marks", async (req, res) => {
 
   res.json(result.rows);
 });
+//create schedule
+app.post("/schedules/batch", async (req, res) => {
+  const { mentor_id, days, start_time, end_time } = req.body;
+  try {
+    for (const day of days) {
+      await pool.query(
+        `INSERT INTO schedules (mentor_id, day_of_week, start_time, end_time)
+         VALUES ($1, $2, $3, $4)`,
+        [mentor_id, day, start_time, end_time]
+      );
+    }
+    res.status(201).json({ message: "Schedules created" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 // test connection
 pool.connect()
   .then(() => console.log("✅ PostgreSQL connected"))

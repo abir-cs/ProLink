@@ -1,26 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:pro_link/features/admin/intern_service.dart';
 import '../intern/workid.dart';
 import '../../core/app_colors.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-class InternsAssignment extends StatelessWidget {
-
-  const InternsAssignment({
-    super.key,
-  });
-  static List<Intern> interns = [
-    Intern("assets/images/pfp.png", "Abir", "Belhadef", "abir@mail.com"),
-    Intern("assets/images/pfp.png", "Sara", "Ali", "sara@mail.com"),
-    Intern("assets/images/pfp.png", "Mohamed", "Amine", "mohamed@mail.com"),
-    Intern("assets/images/pfp.png", "Yasmine", "Kouider", "yasmine@mail.com"),
-    Intern("assets/images/pfp.png", "Karim", "Haddad", "karim@mail.com"),
-  ];
+class InternsAssignment extends StatefulWidget {
+  const InternsAssignment({super.key});
 
   @override
+  State<InternsAssignment> createState() => _InternsAssignmentState();
+}
+
+class _InternsAssignmentState extends State<InternsAssignment> {
+  @override
+  Future<List<Intern>> interns =
+  InternService.fetchInternsnotAssignedToMentor();
+  Future<void> refreshPage() async {
+    setState(() {
+      interns = InternService.fetchInternsnotAssignedToMentor();
+    });
+  }
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Interns to Validate"),
-      ),
+      appBar: AppBar(title: Text("Interns to Validate")),
       body: Padding(
         padding: const EdgeInsets.all(0),
         child: Container(
@@ -41,28 +43,49 @@ class InternsAssignment extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      "Speciality",
-                      style: TextStyle(
-                        color: AppColors.primarySoft,
-                        fontWeight: FontWeight.w600,
-                      ),
+
+                  // pushes the next widget to the far right
+                  Spacer(),
+                  Text(
+                    "Decision",
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      color: AppColors.primarySoft,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  SizedBox(width: 80), // space for buttons
+                  SizedBox(width: 10),
                 ],
               ),
               Divider(color: Colors.white.withOpacity(0.05)),
               Expanded(
-                child: ListView.builder(
-                  itemCount: interns.length,
-                  itemBuilder: (context, index) {
-                    final intern = interns[index];
-                    return internValidationRow(intern,context);
+                child: RefreshIndicator(
+                  onRefresh: refreshPage,
+                child: FutureBuilder<List<Intern>>(
+                  future: interns,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (snapshot.hasError) {
+                      return const Center(child: Text("Error loading interns"));
+                    }
+                    final data = snapshot.data ?? [];
+                    if (data.isEmpty) {
+                      return const Center(child: Text("No pending interns"));
+                    }
+                    return ListView.builder(
+                      itemCount: data.length,
+                      itemBuilder: (context, index) {
+                        return internAssignmentRow(data[index], context, () {
+                          setState(() {
+                            final intern = data[index]; // or update list properly
+                          });
+                        });
+                      },
+                    );
                   },
-                ),
+                ),)
               ),
             ],
           ),
@@ -70,152 +93,270 @@ class InternsAssignment extends StatelessWidget {
       ),
     );
   }
+
 }
-Widget internValidationRow(Intern intern,BuildContext context) {
+
+Widget internAssignmentRow(
+  Intern intern,
+  BuildContext context,
+  VoidCallback onAssigned,
+) {
   return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 12),
+    padding: const EdgeInsets.symmetric(vertical: 10),
     child: Column(
       children: [
         Row(
           children: [
+            /// Avatar + Info
             Expanded(
-              flex: 3,
               child: Row(
                 children: [
                   CircleAvatar(
-                    radius: 18,
-                    backgroundImage: AssetImage(intern.avatar),
+                    radius: 22,
+                    backgroundImage: AssetImage(
+                      intern.avatar ?? 'assets/images/pfp.png',
+                    ),
                   ),
-                  SizedBox(width: 12),
-                  Text(
-                    "${intern.name} ${intern.Lname}",
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w500,
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "${intern.name} ${intern.lname}",
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          intern.email,
+                          style: TextStyle(color: Colors.white70, fontSize: 13),
+                        ),
+                        const SizedBox(height: 6),
+                        GestureDetector(
+                          onTap: () async {
+                            final uri = Uri.parse(
+                              "http://192.168.1.7:3000/uploads/cv/cv.pdf",//to change later
+                            );
+
+                            final success = await launchUrl(
+                              uri,
+                              mode: LaunchMode.platformDefault,
+                            );
+
+                            if (!success) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("Could not open CV")),
+                              );
+                            }
+                          },
+                          child: const Text(
+                            "View CV",
+                            style: TextStyle(
+                              color: AppColors.primarySoft,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
-
-            GestureDetector(
-              onTap: () {
-                showAssignDialog(context);
-              },
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppColors.primarySoft.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  'Assign',
+            const SizedBox(width: 12),
+            if(intern.mentor != null)...[
+                 Text(
+                  "Assigned",
                   style: TextStyle(
                     color: AppColors.primarySoft,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
+                  ),
+                 )
+                ]else...[
+                 GestureDetector(
+                  onTap: () async {
+                    final result = await showDialog(
+                      context: context,
+                      builder: (_) => AssignInternDialog(intern: intern),
+                    );
+
+                    if (result == true) {
+                      onAssigned();
+                    }
+                  },
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primarySoft.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'Assign',
+                      style: TextStyle(
+                        color: AppColors.primarySoft,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            )
+                      ]
           ],
         ),
-        Divider(color: Colors.white.withOpacity(0.05)),
+        const SizedBox(height: 12),
+        Divider(color: Colors.white.withOpacity(0.05), height: 1),
       ],
     ),
-
   );
 }
-void showAssignDialog(BuildContext context) {
-  String? selectedDepartment;
-  String? selectedMentor;
 
-  final departments = ["IT", "AI", "Networks", "Security"];
-  final mentors = ["Dr. Smith", "Prof. Ali", "Dr. Sara"];
+class AssignInternDialog extends StatefulWidget {
+  final Intern intern;
 
-  showDialog(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        backgroundColor: AppColors.cardDark,
-        title: Text(
-          "Assign Intern",
-          style: TextStyle(color: AppColors.textPrimary),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            /// Department Dropdown
-            StatefulBuilder(
-              builder: (context, setState) {
-                return Column(
-                  children: [
-                    DropdownButtonFormField<String>(
-                      dropdownColor: AppColors.cardDark,
-                      decoration: InputDecoration(
-                        labelText: "Department",
-                        labelStyle:
-                        TextStyle(color: AppColors.textPrimary),
-                      ),
-                      items: departments.map((dept) {
-                        return DropdownMenuItem(
-                          value: dept,
-                          child: Text(dept),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          selectedDepartment = value;
-                        });
-                      },
+  const AssignInternDialog({Key? key, required this.intern}) : super(key: key);
+  @override
+  State<AssignInternDialog> createState() => _AssignInternDialogState();
+}
+
+class _AssignInternDialogState extends State<AssignInternDialog> {
+  Department? selectedDepartment;
+  Mentor? selectedMentor;
+
+  List<Department> departments = [];
+  List<Mentor> mentors = [];
+
+  bool loadingDepartments = true;
+  bool loadingMentors = false;
+
+  @override
+  void initState() {
+    super.initState();
+    loadDepartments();
+    loadMentors(null);
+  }
+
+  Future<void> loadDepartments() async {
+    departments = await InternService.fetchDepartments();
+    setState(() => loadingDepartments = false);
+  }
+
+  Future<void> loadMentors(int? deptId) async {
+    setState(() => loadingMentors = true);
+
+    mentors =
+        deptId == null
+            ? await InternService.fetchMentors()
+            : await InternService.fetchSpecificDepartmentMentors(deptId);
+
+    selectedMentor = null;
+
+    setState(() => loadingMentors = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final canAssign = selectedDepartment != null && selectedMentor != null;
+
+    return AlertDialog(
+      backgroundColor: AppColors.cardDark,
+      title: Text(
+        "Assign Intern",
+        style: TextStyle(color: AppColors.textPrimary),
+      ),
+
+      content: SizedBox(
+        width: double.maxFinite,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              loadingDepartments
+                  ? const Padding(
+                    padding: EdgeInsets.all(12),
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                  : DropdownButtonFormField<Department>(
+                    dropdownColor: AppColors.cardDark,
+                    decoration: InputDecoration(
+                      labelText: "Department",
+                      labelStyle: TextStyle(color: AppColors.textPrimary),
                     ),
+                    value: selectedDepartment,
+                    items:
+                        departments.map((dept) {
+                          return DropdownMenuItem(
+                            value: dept,
+                            child: Text(dept.name),
+                          );
+                        }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        selectedDepartment = value;
+                      });
 
-                    SizedBox(height: 15),
+                      loadMentors(value?.id);
+                    },
+                  ),
+              const SizedBox(height: 15),
 
-                    /// Mentor Dropdown
-                    DropdownButtonFormField<String>(
-                      dropdownColor: AppColors.cardDark,
-                      decoration: InputDecoration(
-                        labelText: "Mentor",
-                        labelStyle:
-                        TextStyle(color: AppColors.textPrimary),
-                      ),
-                      items: mentors.map((mentor) {
-                        return DropdownMenuItem(
-                          value: mentor,
-                          child: Text(mentor),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          selectedMentor = value;
-                        });
-                      },
+              loadingMentors
+                  ? const Center(child: CircularProgressIndicator())
+                  : DropdownButtonFormField<Mentor>(
+                    dropdownColor: AppColors.cardDark,
+                    decoration: InputDecoration(
+                      labelText: "Mentor",
+                      labelStyle: TextStyle(color: AppColors.textPrimary),
                     ),
-                  ],
-                );
-              },
-            ),
-          ],
+                    value: selectedMentor,
+                    items:
+                        mentors.map((mentor) {
+                          return DropdownMenuItem(
+                            value: mentor,
+                            child: Text("${mentor.fname} ${mentor.lname}"),
+                          );
+                        }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        selectedMentor = value;
+                      });
+                    },
+                  ),
+            ],
+          ),
         ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text("Cancel"),
+        ),
+        ElevatedButton(
+          onPressed:
+              canAssign
+                  ? () async {
+                    final success = await InternService.assignIntern(
+                      internId: widget.intern.id,
+                      mentorId: selectedMentor!.id,
+                      departmentId: selectedDepartment!.id,
+                    );
 
-        /// Actions
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // TODO: save assignment
-              print("Dept: $selectedDepartment");
-              print("Mentor: $selectedMentor");
-
-              Navigator.pop(context);
-            },
-            child: Text("Assign"),
-          ),
-        ],
-      );
-    },
-  );
+                    if (success && mounted) {
+                      Navigator.pop(context, true);
+                    } else if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Assignment failed")),
+                      );
+                    }
+                  }
+                  : null,
+          child: const Text("Assign"),
+        ),
+      ],
+    );
+  }
 }

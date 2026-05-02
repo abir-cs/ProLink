@@ -14,7 +14,6 @@ class ProLinkApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
-
       initialRoute: AppRoutes.login,
       routes: AppRoutes.routes,
     );
