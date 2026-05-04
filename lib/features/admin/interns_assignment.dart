@@ -156,7 +156,7 @@ Widget internAssignmentRow(
                         GestureDetector(
                           onTap: () async {
                             final uri = Uri.parse(
-                              "http://192.168.1.7:3000/uploads/cv/cv.pdf",//to change later
+                              "http://192.168.1.6:3000/uploads/cv/cv.pdf",//to change later
                             );
 
                             final success = await launchUrl(

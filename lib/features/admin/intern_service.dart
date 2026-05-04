@@ -4,8 +4,9 @@ import '/features/intern/workid.dart';
 
 class InternService {
   static Future<List<Intern>> fetchPendingInterns() async {
+
     final response = await http.get(
-      Uri.parse('http://192.168.1.7:3000/interns/pending'),
+      Uri.parse('http://192.168.1.6:3000/interns/pending'),
     );
     if (response.statusCode == 200) {
       List data = jsonDecode(response.body);
@@ -18,7 +19,7 @@ class InternService {
 
   static Future<void> updateInternStatus(int internId, String status) async {
     final response = await http.put(
-      Uri.parse('http://192.168.1.7:3000/interns/$internId/status'),
+      Uri.parse('http://192.168.1.6:3000/interns/$internId/status'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'status': status}),
     );
@@ -34,7 +35,7 @@ class InternService {
     required int departmentId
   }) async {
     final response = await http.put(
-      Uri.parse('http://192.168.1.7:3000/interns/$internId/assign'),
+      Uri.parse('http://192.168.1.6:3000/interns/$internId/assign'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'mentor_id': mentorId, 'department_id': departmentId}),
     );
@@ -49,7 +50,7 @@ class InternService {
 
   static Future<List<Intern>> fetchInternsnotAssignedToMentor() async {
     final response = await http.get(
-      Uri.parse('http://192.168.1.7:3000/interns/waitingassignment'),
+      Uri.parse('http://192.168.1.6:3000/interns/waitingassignment'),
     );
 
     if (response.statusCode == 200) {
@@ -63,7 +64,7 @@ class InternService {
 
   static Future<List<Department>> fetchDepartments() async {
     final response = await http.get(
-      Uri.parse('http://192.168.1.7:3000/departments'),
+      Uri.parse('http://192.168.1.6:3000/departments'),
     );
     if (response.statusCode == 200) {
       List data = jsonDecode(response.body);
@@ -75,7 +76,7 @@ class InternService {
 
   static Future<List<Mentor>> fetchMentors() async {
     final response = await http.get(
-      Uri.parse('http://192.168.1.7:3000/mentors'),
+      Uri.parse('http://192.168.1.6:3000/mentors'),
     );
     if (response.statusCode == 200) {
       List data = jsonDecode(response.body);
@@ -89,7 +90,7 @@ class InternService {
     int departmentId,
   ) async {
     final response = await http.get(
-      Uri.parse('http://192.168.1.7:3000/departments/$departmentId/mentors'),
+      Uri.parse('http://192.168.1.6:3000/departments/$departmentId/mentors'),
     );
     print("❤️STATUS: ${response.statusCode}");
     print("❤️BODY: ${response.body}");
@@ -107,7 +108,7 @@ class InternService {
     required String endTime,
   }) async {
     final response = await http.post(
-      Uri.parse('http://192.168.1.7:3000/schedules/batch'),
+      Uri.parse('http://192.168.1.6:3000/schedules/batch'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'mentor_id': mentorId,

@@ -15,7 +15,7 @@ const pool = new Pool({
   user: "postgres",
   host: "localhost",
   database: "prolink",
-  password: "1552006",
+  password: "7bsouna1",
   port: 5432,
 });
 
@@ -49,7 +49,6 @@ app.post("/login", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
-
 
 //intern register
 const storage = multer.diskStorage({
@@ -108,6 +107,9 @@ app.post("/register/intern", upload.single("cv"), async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+
+//-------------------------------------Admin APIs-------------------------------------------------
 
 //get waiting interns
 app.get("/interns/pending", async (req, res) => {
@@ -180,6 +182,23 @@ app.get("/departments/:id/mentors", async (req, res) => {
   }
 });
 
+//create schedule
+app.post("/schedules/batch", async (req, res) => {
+  const { mentor_id, days, start_time, end_time } = req.body;
+  try {
+    for (const day of days) {
+      await pool.query(
+        `INSERT INTO schedules (mentor_id, day_of_week, start_time, end_time)
+         VALUES ($1, $2, $3, $4)`,
+        [mentor_id, day, start_time, end_time]
+      );
+    }
+    res.status(201).json({ message: "Schedules created" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+//-----------------------------------------Mentor APIs-------------------------------------
 //get interns assigned to mentor
 app.get("/mentor/:id/interns", async (req, res) => {
   const { id } = req.params;
@@ -358,17 +377,26 @@ app.put("/intern/:id/picture", uploadProfile.single("picture"), async (req, res)
   }
 });
 
-
 //get training modules
-app.get("/training/:mentor_id", async (req, res) => {
-  const { mentor_id } = req.params;
+app.get("/intern/:id/training", async (req, res) => {
+  const { id } = req.params;
 
-  const result = await pool.query(
-    "SELECT * FROM training_modules WHERE mentor_id=$1",
-    [mentor_id]
-  );
+  try {
+    const result = await pool.query(
+      `SELECT t.*
+       FROM interns i
+       JOIN training_modules t
+         ON t.mentor_id = i.mentor_id
+       WHERE i.intern_id = $1`,
+      [id]
+    );
 
-  res.json(result.rows);
+    res.json(result.rows);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
 });
 
 //get marks
@@ -399,20 +427,55 @@ app.get("/intern/:id/skills-with-marks", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
-//create schedule
-app.post("/schedules/batch", async (req, res) => {
-  const { mentor_id, days, start_time, end_time } = req.body;
+
+//get schedule
+app.get("/intern/:id/schedule", async (req, res) => {
+  const { id } = req.params;
+
   try {
-    for (const day of days) {
-      await pool.query(
-        `INSERT INTO schedules (mentor_id, day_of_week, start_time, end_time)
-         VALUES ($1, $2, $3, $4)`,
-        [mentor_id, day, start_time, end_time]
-      );
-    }
-    res.status(201).json({ message: "Schedules created" });
+    const result = await pool.query(
+      `SELECT s.day_of_week, s.start_time, s.end_time
+       FROM interns i
+       JOIN schedules s
+         ON s.mentor_id = i.mentor_id
+       WHERE i.intern_id = $1
+       ORDER BY
+         CASE s.day_of_week
+           WHEN 'Sat' THEN 1
+           WHEN 'Sun' THEN 2
+           WHEN 'Mon' THEN 3
+           WHEN 'Tue' THEN 4
+           WHEN 'Wed' THEN 5
+           WHEN 'Thu' THEN 6
+         END`,
+      [id]
+    );
+
+    res.json(result.rows);
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+//get average mark
+app.get("/intern/:id/average-mark", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT COALESCE(AVG(mark), 0) AS avg_mark
+       FROM marks
+       WHERE intern_id = $1`,
+      [id]
+    );
+
+    res.json(result.rows[0]);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 

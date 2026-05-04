@@ -1,17 +1,17 @@
 import '../../core/app_colors.dart';
 import 'package:flutter/material.dart';
-import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import '../providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 class Intern {
   final int id;
   final String? avatar;
   final String name;
   final String lname;
   final String email;
-  late String status;
+  late String? status;
   final String? department;
   final String? mentor;
   final String? cv;
@@ -58,6 +58,13 @@ class DigitalIDCard extends ConsumerStatefulWidget {
 }
 
 class _DigitalIDCardState extends ConsumerState<DigitalIDCard> {
+  late final baseUrl ;
+  @override
+  void initState() {
+    super.initState();
+    baseUrl = ref.read(baseUrlProvider);
+  }
+
   @override
   Widget build(BuildContext context) {
     return  Container(
@@ -76,11 +83,14 @@ class _DigitalIDCardState extends ConsumerState<DigitalIDCard> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           CircleAvatar(
-            backgroundImage: widget.intern.avatar != null
-                ? NetworkImage("http://192.168.1.7:3000/${widget.intern.avatar}")
+
+            backgroundImage: widget.intern.avatar != null ?
+
+                  NetworkImage("${baseUrl}/${widget.intern.avatar}")
                 : const AssetImage("assets/images/pfp.png") as ImageProvider,
             radius: 60,
           ),
+          Container(width: 1,height: 100,color: AppColors.textMuted,),
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -106,7 +116,7 @@ class _DigitalIDCardState extends ConsumerState<DigitalIDCard> {
                     try {
                       var request = http.MultipartRequest(
                         "PUT",
-                        Uri.parse("http://192.168.1.7:3000/intern/$userId/picture"),
+                        Uri.parse("${baseUrl}/intern/$userId/picture"),
                       );
 
                       request.files.add(

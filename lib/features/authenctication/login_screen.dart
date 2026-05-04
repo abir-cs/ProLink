@@ -70,10 +70,10 @@ class _LoginFormState extends ConsumerState<LoginForm> {
               );
               return;
             }
-
+            final baseUrl = ref.read(baseUrlProvider);
             try {
               final response = await http.post(
-                Uri.parse("http://192.168.1.7:3000/login"), // emulator -> localhost
+                Uri.parse("${baseUrl}/login"), // emulator -> localhost
                 headers: {"Content-Type": "application/json"},
                 body: jsonEncode({
                   "email": email,

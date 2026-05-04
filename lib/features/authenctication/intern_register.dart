@@ -1,11 +1,8 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'waiting.dart';
 import 'package:file_picker/file_picker.dart';
-import 'dart:io';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -62,7 +59,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     try {
       var request = http.MultipartRequest(
         "POST",
-        Uri.parse("http://192.168.1.7:3000/register/intern"),
+        Uri.parse("http://192.168.1.6:3000/register/intern"),
       );
 
       request.fields["email"] = email;

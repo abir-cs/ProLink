@@ -35,6 +35,7 @@ class _AddTrainingPageState extends ConsumerState<AddTrainingPage> {
   Future<void> uploadModule() async {
     final mentorId = ref.read(userIdProvider);
     final name = nameController.text.trim();
+    final baseUrl = ref.read(baseUrlProvider);
 
     if (name.isEmpty || selectedFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -48,7 +49,7 @@ class _AddTrainingPageState extends ConsumerState<AddTrainingPage> {
     try {
       var request = http.MultipartRequest(
         "POST",
-        Uri.parse("http://192.168.1.6:3000/training"),
+        Uri.parse("${baseUrl}/training"),
       );
 
       request.fields["mentor_id"] = mentorId.toString();

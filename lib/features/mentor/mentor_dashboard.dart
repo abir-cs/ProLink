@@ -14,10 +14,11 @@ class MentorDashboard extends ConsumerStatefulWidget {
 class _MentorDashboardState extends ConsumerState<MentorDashboard> {
   List interns = [];
   bool isLoading = true;
-
+  late final baseUrl;
   @override
   void initState() {
     super.initState();
+    baseUrl = ref.read(baseUrlProvider);
     fetchInterns();
   }
 
@@ -25,7 +26,7 @@ class _MentorDashboardState extends ConsumerState<MentorDashboard> {
     final mentorId = ref.read(userIdProvider);
 
     final response = await http.get(
-      Uri.parse("http://192.168.1.6:3000/mentor/$mentorId/interns"),
+      Uri.parse("${baseUrl}/mentor/$mentorId/interns"),
     );
 
     if (response.statusCode == 200) {
@@ -64,7 +65,7 @@ class _MentorDashboardState extends ConsumerState<MentorDashboard> {
               leading: CircleAvatar(
                 backgroundImage: intern["picture_url"] != null
                     ? NetworkImage(
-                    "http://192.168.1.6:3000/${intern["picture_url"]}")
+                    "${baseUrl}/${intern["picture_url"]}")
                     : const AssetImage("assets/images/pfp.png")
                 as ImageProvider,
               ),
