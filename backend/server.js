@@ -319,6 +319,26 @@ app.post("/attendance", async (req, res) => {
   res.json(result.rows[0]);
 });
 
+//fetch attendances
+app.get("/intern/:id/attendance", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT date, status
+       FROM attendance
+       WHERE intern_id = $1
+       ORDER BY date DESC`,
+      [id]
+    );
+
+    res.json(result.rows);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
 //-------------------------Intern API Calls -----------------------------
 //fetch intern

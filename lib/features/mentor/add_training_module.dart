@@ -1,8 +1,8 @@
 import 'dart:io';
+import '../../core/app_colors.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers.dart';
 
@@ -85,38 +85,134 @@ class _AddTrainingPageState extends ConsumerState<AddTrainingPage> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
+    // final AppColors = context.AppColors;
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Add Training Module")),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(labelText: "Module Name"),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text("Add Training Module"),
+        elevation: 0,
+        backgroundColor: AppColors.background,
+      ),
+      body: Center(
+        child: SingleChildScrollView(
+          child: Container(
+            width: 420,
+            padding: const EdgeInsets.all(24),
+            margin: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.cardDark,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
             ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 🔹 Title
+                Text(
+                  "Upload Training Module",
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
 
-            const SizedBox(height: 20),
+                const SizedBox(height: 5),
 
-            ElevatedButton(
-              onPressed: pickFile,
-              child: Text(
-                selectedFile == null
-                    ? "Select PDF"
-                    : "PDF Selected",
-              ),
+                Text(
+                  "Provide a module name and upload a PDF file.",
+                  style: TextStyle(color: AppColors.textSecondary),
+                ),
+
+                const SizedBox(height: 25),
+
+                // 🔹 Module Name Input
+                TextField(
+                  controller: nameController,
+                  style: TextStyle(color: AppColors.textPrimary),
+                  decoration: InputDecoration(
+                    labelText: "Module Name",
+                    labelStyle: TextStyle(color: AppColors.textSecondary),
+                    filled: true,
+                    fillColor: AppColors.cardLight,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // 🔹 File Picker Card
+                GestureDetector(
+                  onTap: pickFile,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardLight,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.picture_as_pdf,
+                            color: AppColors.progressBlue, size: 32),
+
+                        const SizedBox(width: 15),
+
+                        Expanded(
+                          child: Text(
+                            selectedFile == null
+                                ? "Select PDF file"
+                                : selectedFile!.path.split("/").last,
+                            style: TextStyle(
+                              color: AppColors.textPrimary,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+
+                        Icon(Icons.upload_file,
+                            color: AppColors.textSecondary),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 25),
+
+                // 🔹 Upload Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: isLoading ? null : uploadModule,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      backgroundColor: AppColors.primaryStart,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: isLoading
+                        ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                        : const Text(
+                      "Upload Module",
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ),
+              ],
             ),
-
-            const SizedBox(height: 20),
-
-            ElevatedButton(
-              onPressed: isLoading ? null : uploadModule,
-              child: isLoading
-                  ? const CircularProgressIndicator()
-                  : const Text("Upload"),
-            ),
-          ],
+          ),
         ),
       ),
     );
