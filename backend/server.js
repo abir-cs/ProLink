@@ -15,7 +15,7 @@ const pool = new Pool({
   user: "postgres",
   host: "localhost",
   database: "prolink",
-  password: "7bsouna1",
+  password: "1552006",
   port: 5432,
 });
 
@@ -110,7 +110,25 @@ app.post("/register/intern", upload.single("cv"), async (req, res) => {
 
 
 //-------------------------------------Admin APIs-------------------------------------------------
+app.get("/admin/:id", async (req, res) => {
+  const { id } = req.params;
 
+  try {
+    const result = await pool.query(
+      "SELECT fname, lname FROM admins WHERE admin_id = $1",
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Admin not found" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 //get waiting interns
 app.get("/interns/pending", async (req, res) => {
   const result = await pool.query(
@@ -126,6 +144,13 @@ app.get("/interns/waitingassignment", async (req, res) => {
   );
   res.json(result.rows);
 });
+//get interns that are assigned
+app.get("/interns/assigned", async (req, res) => {
+  const result = await pool.query(
+    "SELECT * FROM interns WHERE mentor_id is not NULL AND status='accepted'"
+  );
+  res.json(result.rows);
+});
 
 //accept or reject intern
 app.put("/interns/:id/status", async (req, res) => {
@@ -138,7 +163,6 @@ app.put("/interns/:id/status", async (req, res) => {
   );
 
 //
-
   res.json({ message: "Updated" });
 });
 
@@ -196,6 +220,153 @@ app.post("/schedules/batch", async (req, res) => {
     res.status(201).json({ message: "Schedules created" });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+// update schedule
+app.post("/schedules/replace", async (req, res) => {
+  const { mentor_id, days, start_time, end_time } = req.body;
+
+  console.log("BODY:", req.body);
+
+  try {
+    await pool.query(
+      'DELETE FROM schedules WHERE mentor_id = $1',
+      [mentor_id]
+    );
+
+    for (const day of days) {
+      console.log("Inserting:", day);
+
+      await pool.query(
+        'INSERT INTO schedules (mentor_id, day_of_week, start_time, end_time) VALUES ($1, $2, $3, $4)',
+        [mentor_id, day, start_time, end_time]
+      );
+    }
+
+    res.status(201).json({ message: "Schedule replaced successfully" });
+
+  } catch (err) {
+    console.error("ERROR:", err);   // 👈 THIS IS KEY
+    res.status(500).json({ error: err.message });
+  }
+});
+//check if mentor has a schedule
+app.get("/schedules/mentor/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT * FROM schedules WHERE mentor_id = $1`,
+      [id]
+    );
+
+    res.json({
+      exists: result.rows.length > 0,
+      schedules: result.rows,
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+// create a mentor account
+app.post("/mentor/create", async (req, res) => {
+  const { email, password, fname, lname, department_id } = req.body;
+  if (!email || !password || !fname || !lname || !department_id) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
+  try {
+    const deptCheck = await pool.query(
+      "SELECT * FROM departments WHERE department_id = $1",
+      [department_id]
+    );
+    if (deptCheck.rows.length === 0) {
+      return res.status(400).json({ error: "Invalid department" });
+    }
+    const emailCheck = await pool.query(
+      "SELECT * FROM mentors WHERE email = $1",
+      [email]
+    );
+    if (emailCheck.rows.length > 0) {
+      return res.status(400).json({ error: "Email already exists" });
+    }
+    await pool.query(
+      'INSERT INTO mentors (department_id, email, password, fname, lname) VALUES ($1, $2, $3, $4, $5)',
+      [department_id, email, password, fname, lname]
+    );
+    res.status(200).json({ message: "Mentor created successfully" });
+
+  } catch (err) {
+    console.error("ERROR:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+//create an admin account
+app.post("/admin/create", async (req, res) => {
+  const { email, password, fname, lname } = req.body;
+
+  if (!email || !password || !fname || !lname) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
+  try {
+
+    const check = await pool.query(
+      "SELECT * FROM admins WHERE email = $1",
+      [email]
+    );
+
+    if (check.rows.length > 0) {
+      return res.status(400).json({ error: "Email already exists" });
+    }
+    await pool.query(
+      `INSERT INTO admins (email, password, fname, lname)
+       VALUES ($1, $2, $3, $4)`,
+      [email, password, fname, lname]
+    );
+    res.status(200).json({ message: "Admin created successfully" });
+
+  } catch (err) {
+
+    console.error("ERROR:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+// get mentor from id
+app.get("/mentors/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(
+      "SELECT * FROM mentors WHERE mentor_id = $1",
+      [id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Mentor not found" });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+// get department from id
+app.get("/departments/:id", async (req, res) => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) {
+    return res.status(400).json({ error: "Invalid ID" });
+  }
+  try {
+    const result = await pool.query(
+      "SELECT * FROM departments WHERE department_id = $1",
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Department not found" });
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("DB ERROR:", err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 //-----------------------------------------Mentor APIs-------------------------------------
@@ -498,116 +669,7 @@ app.get("/intern/:id/average-mark", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
-app.post("/schedules/replace", async (req, res) => {
-  const { mentor_id, days, start_time, end_time } = req.body;
 
-  console.log("BODY:", req.body);
-
-  try {
-    await pool.query(
-      'DELETE FROM schedules WHERE mentor_id = $1',
-      [mentor_id]
-    );
-
-    for (const day of days) {
-      console.log("Inserting:", day);
-
-      await pool.query(
-        'INSERT INTO schedules (mentor_id, day_of_week, start_time, end_time) VALUES ($1, $2, $3, $4)',
-        [mentor_id, day, start_time, end_time]
-      );
-    }
-
-    res.status(201).json({ message: "Schedule replaced successfully" });
-
-  } catch (err) {
-    console.error("ERROR:", err);   // 👈 THIS IS KEY
-    res.status(500).json({ error: err.message });
-  }
-});
-app.get("/schedules/mentor/:id", async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    const result = await pool.query(
-      `SELECT * FROM schedules WHERE mentor_id = $1`,
-      [id]
-    );
-
-    res.json({
-      exists: result.rows.length > 0,
-      schedules: result.rows,
-    });
-
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-app.post("/mentor/create", async (req, res) => {
-  const { email, password, fname, lname, department_id } = req.body;
-  if (!email || !password || !fname || !lname || !department_id) {
-    return res.status(400).json({ error: "All fields are required" });
-  }
-  try {
-    const deptCheck = await pool.query(
-      "SELECT * FROM departments WHERE department_id = $1",
-      [department_id]
-    );
-    if (deptCheck.rows.length === 0) {
-      return res.status(400).json({ error: "Invalid department" });
-    }
-    const emailCheck = await pool.query(
-      "SELECT * FROM mentors WHERE email = $1",
-      [email]
-    );
-    if (emailCheck.rows.length > 0) {
-      return res.status(400).json({ error: "Email already exists" });
-    }
-    await pool.query(
-      'INSERT INTO mentors (department_id, email, password, fname, lname) VALUES ($1, $2, $3, $4, $5)',
-      [department_id, email, password, fname, lname]
-    );
-    res.status(200).json({ message: "Mentor created successfully" });
-
-  } catch (err) {
-    console.error("ERROR:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
-app.post("/admin/create", async (req, res) => {
-  const { email, password, fname, lname } = req.body;
-
-  // ✅ 1. Validate
-  if (!email || !password || !fname || !lname) {
-    return res.status(400).json({ error: "All fields are required" });
-  }
-
-  try {
-    // ✅ 2. Check duplicate email
-    const check = await pool.query(
-      "SELECT * FROM admins WHERE email = $1",
-      [email]
-    );
-
-    if (check.rows.length > 0) {
-      return res.status(400).json({ error: "Email already exists" });
-    }
-
-    // ✅ 3. Insert admin
-    await pool.query(
-      `INSERT INTO admins (email, password, fname, lname)
-       VALUES ($1, $2, $3, $4)`,
-      [email, password, fname, lname]
-    );
-
-    // ✅ 4. Success
-    res.status(200).json({ message: "Admin created successfully" });
-
-  } catch (err) {
-    console.error("ERROR:", err);
-    res.status(500).json({ error: err.message });
-  }
-});
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 // test connection
 pool.connect()
