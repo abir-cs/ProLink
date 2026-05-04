@@ -11,9 +11,9 @@ class Intern {
   final String name;
   final String lname;
   final String email;
-  late String status;
+  late String? status;
   final String? department;
-  final String? mentor;
+  late String? mentor;
   final String? cv;
 
   Intern({
@@ -77,7 +77,7 @@ class _DigitalIDCardState extends ConsumerState<DigitalIDCard> {
         children: [
           CircleAvatar(
             backgroundImage: widget.intern.avatar != null
-                ? NetworkImage("http://192.168.1.7:3000/${widget.intern.avatar}")
+                ? NetworkImage("http://192.168.1.4:3000/${widget.intern.avatar}")
                 : const AssetImage("assets/images/pfp.png") as ImageProvider,
             radius: 60,
           ),
@@ -106,7 +106,7 @@ class _DigitalIDCardState extends ConsumerState<DigitalIDCard> {
                     try {
                       var request = http.MultipartRequest(
                         "PUT",
-                        Uri.parse("http://192.168.1.7:3000/intern/$userId/picture"),
+                        Uri.parse("http://192.168.1.4:3000/intern/$userId/picture"),
                       );
 
                       request.files.add(

@@ -5,7 +5,7 @@ import '/features/intern/workid.dart';
 class InternService {
   static Future<List<Intern>> fetchPendingInterns() async {
     final response = await http.get(
-      Uri.parse('http://192.168.1.7:3000/interns/pending'),
+      Uri.parse('http://192.168.1.4:3000/interns/pending'),
     );
     if (response.statusCode == 200) {
       List data = jsonDecode(response.body);
@@ -18,7 +18,7 @@ class InternService {
 
   static Future<void> updateInternStatus(int internId, String status) async {
     final response = await http.put(
-      Uri.parse('http://192.168.1.7:3000/interns/$internId/status'),
+      Uri.parse('http://192.168.1.4:3000/interns/$internId/status'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'status': status}),
     );
@@ -34,7 +34,7 @@ class InternService {
     required int departmentId
   }) async {
     final response = await http.put(
-      Uri.parse('http://192.168.1.7:3000/interns/$internId/assign'),
+      Uri.parse('http://192.168.1.4:3000/interns/$internId/assign'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({'mentor_id': mentorId, 'department_id': departmentId}),
     );
@@ -49,7 +49,7 @@ class InternService {
 
   static Future<List<Intern>> fetchInternsnotAssignedToMentor() async {
     final response = await http.get(
-      Uri.parse('http://192.168.1.7:3000/interns/waitingassignment'),
+      Uri.parse('http://192.168.1.4:3000/interns/waitingassignment'),
     );
 
     if (response.statusCode == 200) {
@@ -63,7 +63,7 @@ class InternService {
 
   static Future<List<Department>> fetchDepartments() async {
     final response = await http.get(
-      Uri.parse('http://192.168.1.7:3000/departments'),
+      Uri.parse('http://192.168.1.4:3000/departments'),
     );
     if (response.statusCode == 200) {
       List data = jsonDecode(response.body);
@@ -75,7 +75,7 @@ class InternService {
 
   static Future<List<Mentor>> fetchMentors() async {
     final response = await http.get(
-      Uri.parse('http://192.168.1.7:3000/mentors'),
+      Uri.parse('http://192.168.1.4:3000/mentors'),
     );
     if (response.statusCode == 200) {
       List data = jsonDecode(response.body);
@@ -89,7 +89,7 @@ class InternService {
     int departmentId,
   ) async {
     final response = await http.get(
-      Uri.parse('http://192.168.1.7:3000/departments/$departmentId/mentors'),
+      Uri.parse('http://192.168.1.4:3000/departments/$departmentId/mentors'),
     );
     print("❤️STATUS: ${response.statusCode}");
     print("❤️BODY: ${response.body}");
@@ -107,7 +107,7 @@ class InternService {
     required String endTime,
   }) async {
     final response = await http.post(
-      Uri.parse('http://192.168.1.7:3000/schedules/batch'),
+      Uri.parse('http://192.168.1.4:3000/schedules/batch'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'mentor_id': mentorId,
@@ -119,6 +119,39 @@ class InternService {
     print("❤️STATUS: ${response.statusCode}");
     if (response.statusCode != 201) {
       throw Exception("Failed to create schedule batch");
+    }
+  }
+  static Future<void> replaceSchedule({
+    required int mentorId,
+    required List<String> days,
+    required String startTime,
+    required String endTime,
+  }) async {
+    final response = await http.post(
+      Uri.parse('http://192.168.1.4:3000/schedules/replace'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'mentor_id': mentorId,
+        'days': days,
+        'start_time': startTime,
+        'end_time': endTime,
+      }),
+    );
+    print("❤️STATUS: ${response.statusCode}");
+    if (response.statusCode != 201) {
+      throw Exception("Failed to replace schedule");
+    }
+  }
+  static Future<bool> checkMentorSchedule(int mentorId) async {
+    final response = await http.get(
+      Uri.parse('http://192.168.1.4:3000/schedules/mentor/$mentorId'),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data["exists"] == true;
+    } else {
+      throw Exception("Failed to check schedule");
     }
   }
 }

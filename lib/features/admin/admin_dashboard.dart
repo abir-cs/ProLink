@@ -57,20 +57,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   void openIntern(SearchResult item) {
     if (item.source == "validate") {
-      Navigator.pushNamed(
-        context,
-        AppRoutes.iv,
-        arguments: item.intern,
-      );
+      Navigator.pushNamed(context, AppRoutes.iv, arguments: item.intern);
     } else {
-      Navigator.pushNamed(
-        context,
-        AppRoutes.isa,
-        arguments: item.intern,
-      );
+      Navigator.pushNamed(context, AppRoutes.isa, arguments: item.intern);
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -90,13 +81,78 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     });
                   },
                 ),
-
                 const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, AppRoutes.ca);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            gradient: AppGradients.primary,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Row(
+                            children: [
+                              Icon(
+                                Icons.admin_panel_settings_sharp,
+                                size: 30,
+                                color: AppColors.textSecondary,
+                              ),
+                              SizedBox(width: 10),
+                              Text(
+                                "Create Admin",
+                                style: TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 18,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
 
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, AppRoutes.cm);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            gradient: AppGradients.primary,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Row(
+                            children: [
+                              Icon(
+                                Icons.person_add_alt_1,
+                                size: 30,
+                                color: AppColors.textSecondary,
+                              ),
+                              SizedBox(width: 10),
+                              Text(
+                                "Create Mentor",
+                                style: TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 18,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10),
                 _UploadButton(),
-
-                const SizedBox(height: 20),
-
+                SizedBox(height: 20),
                 Expanded(
                   child: SingleChildScrollView(
                     child: Column(
@@ -408,7 +464,7 @@ class _CreateScheduleDialogState extends State<CreateScheduleDialog> {
   TimeOfDay? startTime;
   TimeOfDay? endTime;
 
-  final days = ["Mon", "Tues", "Wed", "Thur", "Fri", "Sat", "Sun"];
+  final days = ["Sun", "Mon", "Tue", "Wed", "Thu"];
 
   @override
   void initState() {
@@ -421,7 +477,20 @@ class _CreateScheduleDialogState extends State<CreateScheduleDialog> {
     setState(() => loadingMentors = false);
   }
 
-  @override
+  void showBottomMessage(
+    BuildContext context,
+    String message, {
+    bool isError = false,
+  }) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Colors.red : Colors.green,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final canSave =
@@ -609,7 +678,8 @@ class _CreateScheduleDialogState extends State<CreateScheduleDialog> {
                               final start =
                                   startTime!.hour * 60 + startTime!.minute;
                               final end = endTime!.hour * 60 + endTime!.minute;
-
+                              const int minWorkTime = 8 * 60; // 08:00
+                              const int maxWorkTime = 18 * 60; // 20:00
                               if (end <= start) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
@@ -620,13 +690,104 @@ class _CreateScheduleDialogState extends State<CreateScheduleDialog> {
                                 );
                                 return;
                               }
-                              await InternService.createScheduleBatch(
-                                mentorId: selectedMentor!.id,
-                                days: selectedDays,
-                                startTime: formatTime24(startTime!),
-                                endTime: formatTime24(endTime!),
-                              );
+                              if (start < minWorkTime || end > maxWorkTime) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      "Working hours must be between 08:00 and 18:00",
+                                    ),
+                                  ),
+                                );
+                                return;
+                              }
+                              Future<void> submitSchedule() async {
+                                await InternService.replaceSchedule(
+                                  mentorId: selectedMentor!.id,
+                                  days: selectedDays,
+                                  startTime: formatTime24(startTime!),
+                                  endTime: formatTime24(endTime!),
+                                );
+                                showBottomMessage(
+                                  context,
+                                  "Schedule replaced successfully",
+                                );
+                              }
 
+                              try {
+                                bool exists =
+                                    await InternService.checkMentorSchedule(
+                                      selectedMentor!.id,
+                                    );
+
+                                if (exists) {
+                                  final confirm = await showDialog<bool>(
+                                    context: context,
+                                    builder: (context) {
+                                      return AlertDialog(
+                                        title: const Text(
+                                          "Schedule already exists",
+                                        ),
+                                        content: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Text(
+                                              "This mentor already has a schedule.",
+                                            ),
+                                            const SizedBox(height: 10),
+                                            // Placeholder schedule preview button
+                                            TextButton(
+                                              onPressed: () {
+                                                // later you can show full schedule page
+                                              },
+                                              child: const Text(
+                                                "View current schedule",
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed:
+                                                () => Navigator.pop(
+                                                  context,
+                                                  false,
+                                                ),
+                                            child: const Text("Cancel"),
+                                          ),
+
+                                          ElevatedButton(
+                                            onPressed: () {
+                                              Navigator.pop(context, true);
+                                            },
+                                            child: const Text("Replace"),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+
+                                  if (confirm != true) return;
+
+                                  await submitSchedule();
+                                } else {
+                                  await InternService.createScheduleBatch(
+                                    mentorId: selectedMentor!.id,
+                                    days: selectedDays,
+                                    startTime: formatTime24(startTime!),
+                                    endTime: formatTime24(endTime!),
+                                  );
+                                  showBottomMessage(
+                                    context,
+                                    "Schedule created successfully",
+                                  );
+                                }
+                              } catch (e) {
+                                showBottomMessage(
+                                  context,
+                                  "Operation failed: $e",
+                                  isError: true,
+                                );
+                              }
                               if (mounted) Navigator.pop(context, true);
                             }
                             : null,

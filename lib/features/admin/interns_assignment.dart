@@ -4,7 +4,6 @@ import '../intern/workid.dart';
 import '../../core/app_colors.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-
 class InternsAssignment extends StatefulWidget {
   const InternsAssignment({super.key});
 
@@ -26,18 +25,19 @@ class _InternsAssignmentState extends State<InternsAssignment> {
     controller.dispose();
     super.dispose();
   }
-  @override
+
   Future<List<Intern>> interns =
-  InternService.fetchInternsnotAssignedToMentor();
+      InternService.fetchInternsnotAssignedToMentor();
   Future<void> refreshPage() async {
     setState(() {
       interns = InternService.fetchInternsnotAssignedToMentor();
     });
   }
+
+  @override
   Widget build(BuildContext context) {
     final Intern? selected =
-    ModalRoute.of(context)!.settings.arguments as Intern?;
-    final ScrollController controller = ScrollController();
+        ModalRoute.of(context)!.settings.arguments as Intern?;
     return Scaffold(
       appBar: AppBar(title: Text("Interns to Validate")),
       body: Padding(
@@ -60,7 +60,6 @@ class _InternsAssignmentState extends State<InternsAssignment> {
                       ),
                     ),
                   ),
-
                   // pushes the next widget to the far right
                   Spacer(),
                   Text(
@@ -78,31 +77,34 @@ class _InternsAssignmentState extends State<InternsAssignment> {
               Expanded(
                 child: RefreshIndicator(
                   onRefresh: refreshPage,
-                child: FutureBuilder<List<Intern>>(
-                  future: interns,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (snapshot.hasError) {
-                      return const Center(child: Text("Error loading interns"));
-                    }
-                    final data = snapshot.data ?? [];
-                    if (data.isEmpty) {
-                      return const Center(child: Text("No pending interns"));
-                    }
-                    return ListView.builder(
-                      itemCount: data.length,
-                      itemBuilder: (context, index) {
-                        return internAssignmentRow(data[index], context, () {
-                          setState(() {
-                            final intern = data[index]; // or update list properly
+                  child: FutureBuilder<List<Intern>>(
+                    future: interns,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (snapshot.hasError) {
+                        return const Center(
+                          child: Text("Error loading interns"),
+                        );
+                      }
+                      final data = snapshot.data ?? [];
+                      if (data.isEmpty) {
+                        return const Center(child: Text("No pending interns"));
+                      }
+                      return ListView.builder(
+                        itemCount: data.length,
+                        itemBuilder: (context, index) {
+                          return internAssignmentRow(data[index], context, (
+                            mentor,
+                          ) {
+                            setState(() {});
                           });
-                        });
-                      },
-                    );
-                  },
-                ),)
+                        },
+                      );
+                    },
+                  ),
+                ),
               ),
             ],
           ),
@@ -110,13 +112,12 @@ class _InternsAssignmentState extends State<InternsAssignment> {
       ),
     );
   }
-
 }
 
 Widget internAssignmentRow(
   Intern intern,
   BuildContext context,
-  VoidCallback onAssigned,
+  Function(Mentor mentor) onAssigned,
 ) {
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 10),
@@ -156,7 +157,7 @@ Widget internAssignmentRow(
                         GestureDetector(
                           onTap: () async {
                             final uri = Uri.parse(
-                              "http://192.168.1.7:3000/uploads/cv/cv.pdf",//to change later
+                              "http://192.168.1.4:3000/uploads/cv/cv.pdf", //to change later
                             );
 
                             final success = await launchUrl(
@@ -166,7 +167,9 @@ Widget internAssignmentRow(
 
                             if (!success) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Could not open CV")),
+                                const SnackBar(
+                                  content: Text("Could not open CV"),
+                                ),
                               );
                             }
                           },
@@ -187,42 +190,43 @@ Widget internAssignmentRow(
               ),
             ),
             const SizedBox(width: 12),
-            if(intern.mentor != null)...[
-                 Text(
-                  "Assigned",
-                  style: TextStyle(
-                    color: AppColors.primarySoft,
-                    fontWeight: FontWeight.w600,
-                  ),
-                 )
-                ]else...[
-                 GestureDetector(
-                  onTap: () async {
-                    final result = await showDialog(
-                      context: context,
-                      builder: (_) => AssignInternDialog(intern: intern),
-                    );
+            if (intern.mentor != null) ...[
+              Text(
+                "Assigned",
+                style: TextStyle(
+                  color: AppColors.primarySoft,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ] else ...[
+              GestureDetector(
+                onTap: () async {
+                  final result = await showDialog(
+                    context: context,
+                    builder: (_) => AssignInternDialog(intern: intern),
+                  );
 
-                    if (result == true) {
-                      onAssigned();
-                    }
-                  },
-                  child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.primarySoft.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      'Assign',
-                      style: TextStyle(
-                        color: AppColors.primarySoft,
-                        fontWeight: FontWeight.w500,
-                      ),
+                  if (result != null) {
+                    intern.mentor = result;
+                    onAssigned(result);
+                  }
+                },
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.primarySoft.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    'Assign',
+                    style: TextStyle(
+                      color: AppColors.primarySoft,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
-                      ]
+              ),
+            ],
           ],
         ),
         const SizedBox(height: 12),
@@ -361,9 +365,8 @@ class _AssignInternDialogState extends State<AssignInternDialog> {
                       mentorId: selectedMentor!.id,
                       departmentId: selectedDepartment!.id,
                     );
-
                     if (success && mounted) {
-                      Navigator.pop(context, true);
+                      Navigator.pop(context, selectedMentor!.id.toString());
                     } else if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text("Assignment failed")),

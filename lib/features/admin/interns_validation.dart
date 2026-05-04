@@ -171,7 +171,7 @@ Widget internValidationRow( BuildContext context,Intern intern,void Function(voi
                         GestureDetector(
                           onTap: () async {
                             final uri = Uri.parse(
-                              "http://192.168.1.7:3000/uploads/cv/cv.pdf",//to change later
+                              "http://192.168.1.4:3000/uploads/cv/cv.pdf",//to change later
                             );
 
                             final success = await launchUrl(
@@ -270,7 +270,7 @@ Widget internValidationRow( BuildContext context,Intern intern,void Function(voi
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  intern.status.toUpperCase(),
+                  intern.status!.toUpperCase(),
                   style: TextStyle(
                     color: intern.status == "accepted"
                         ? AppColors.teal

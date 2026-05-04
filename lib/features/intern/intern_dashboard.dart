@@ -30,7 +30,7 @@ class _InternDashboardState extends ConsumerState<InternDashboard> {
 
     try {
       final response = await http.get(
-        Uri.parse("http://192.168.1.7:3000/intern/$userId"),
+        Uri.parse("http://192.168.1.4:3000/intern/$userId"),
       );
 
       if (response.statusCode == 200) {

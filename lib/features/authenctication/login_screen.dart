@@ -73,7 +73,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
 
             try {
               final response = await http.post(
-                Uri.parse("http://192.168.1.7:3000/login"), // emulator -> localhost
+                Uri.parse("http://192.168.1.4:3000/login"), // emulator -> localhost
                 headers: {"Content-Type": "application/json"},
                 body: jsonEncode({
                   "email": email,
