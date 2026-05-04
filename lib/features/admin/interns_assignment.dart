@@ -4,6 +4,7 @@ import '../intern/workid.dart';
 import '../../core/app_colors.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+
 class InternsAssignment extends StatefulWidget {
   const InternsAssignment({super.key});
 
@@ -25,9 +26,9 @@ class _InternsAssignmentState extends State<InternsAssignment> {
     controller.dispose();
     super.dispose();
   }
-
+  @override
   Future<List<Intern>> interns =
-      InternService.fetchInternsnotAssignedToMentor();
+  InternService.fetchInternsnotAssignedToMentor();
   Future<void> refreshPage() async {
     setState(() {
       interns = InternService.fetchInternsnotAssignedToMentor();
@@ -37,7 +38,8 @@ class _InternsAssignmentState extends State<InternsAssignment> {
   @override
   Widget build(BuildContext context) {
     final Intern? selected =
-        ModalRoute.of(context)!.settings.arguments as Intern?;
+    ModalRoute.of(context)!.settings.arguments as Intern?;
+    final ScrollController controller = ScrollController();
     return Scaffold(
       appBar: AppBar(title: Text("Interns to Validate")),
       body: Padding(
@@ -60,6 +62,7 @@ class _InternsAssignmentState extends State<InternsAssignment> {
                       ),
                     ),
                   ),
+
                   // pushes the next widget to the far right
                   Spacer(),
                   Text(
@@ -112,6 +115,7 @@ class _InternsAssignmentState extends State<InternsAssignment> {
       ),
     );
   }
+
 }
 
 Widget internAssignmentRow(
@@ -365,6 +369,7 @@ class _AssignInternDialogState extends State<AssignInternDialog> {
                       mentorId: selectedMentor!.id,
                       departmentId: selectedDepartment!.id,
                     );
+
                     if (success && mounted) {
                       Navigator.pop(context, selectedMentor!.id.toString());
                     } else if (mounted) {

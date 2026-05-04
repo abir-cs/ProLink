@@ -3,7 +3,7 @@ class AppColors {
   // 🌑 Backgrounds
   static const Color background = Color(0xFF0F172A);
   static const Color cardDark = Color(0xFF1E293B);
-  static const Color cardDarker = Color(0xFF111827);
+  static const Color cardLight = Color(0xFF2C364E);
 
   // 🔵 Primary (Blue / Purple)
   static const Color primaryStart = Color(0xFF5356D1);

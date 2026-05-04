@@ -18,19 +18,24 @@ class InternDashboard extends ConsumerStatefulWidget {
 class _InternDashboardState extends ConsumerState<InternDashboard> {
   Intern? intern;
   bool isLoading = true;
+  double avg = 0;
+  int progressSections = 0;
 
   @override
   void initState() {
     super.initState();
     fetchIntern();
+    fetchAverage();
+
   }
 
   Future<void> fetchIntern() async {
     final userId = ref.read(userIdProvider);
+    final baseUrl = ref.read(baseUrlProvider);
 
     try {
       final response = await http.get(
-        Uri.parse("http://192.168.1.4:3000/intern/$userId"),
+        Uri.parse("${baseUrl}/intern/$userId"),
       );
 
       if (response.statusCode == 200) {
@@ -47,17 +52,32 @@ class _InternDashboardState extends ConsumerState<InternDashboard> {
       });
     }
   }
+  Future<void> fetchAverage() async {
+    final internId = ref.read(userIdProvider);
+    final baseUrl = ref.read(baseUrlProvider);
 
+    final response = await http.get(
+      Uri.parse("$baseUrl/intern/$internId/average-mark"),
+    );
 
-  static int totalModules=5;
-  static int completedModules=3;
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final avgMark = double.tryParse(data["avg_mark"].toString()) ?? 0;
+
+      setState(() {
+        avg = (avgMark*100).floor()/100;
+        progressSections = (avgMark / 10).floor(); // 👈 your requirement
+        isLoading = false;
+      });
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
-
     if (intern == null) {
       return const Center(child: Text("Error loading data"));
     }
@@ -78,12 +98,12 @@ class _InternDashboardState extends ConsumerState<InternDashboard> {
               "Progress Made",
               style: TextStyle(
                   color: AppColors.teal,
-                  fontSize: 25
+                  fontSize: 20
               ),
             ),
             Row(
-              children: List.generate(totalModules, (index) {
-                bool isCompleted = index < completedModules;
+              children: List.generate(10, (index) {
+                bool isCompleted = index < progressSections;
 
                 return Expanded(
                   child: Container(
@@ -99,7 +119,7 @@ class _InternDashboardState extends ConsumerState<InternDashboard> {
               }),
             ),
             Text(
-              "succeeded ${completedModules} training modules out of ${totalModules}",
+              "Average of your marks so far is ${avg}/100",
               style: TextStyle(
                 color: AppColors.textMuted,
               ),
@@ -110,7 +130,7 @@ class _InternDashboardState extends ConsumerState<InternDashboard> {
                 Expanded(
                   child: GestureDetector(
                     onTap: (){
-                      showSchedule(context);
+                      showSchedule(context, ref);
                     },
                     child: Container(
 

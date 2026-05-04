@@ -58,6 +58,13 @@ class DigitalIDCard extends ConsumerStatefulWidget {
 }
 
 class _DigitalIDCardState extends ConsumerState<DigitalIDCard> {
+  late final baseUrl ;
+  @override
+  void initState() {
+    super.initState();
+    baseUrl = ref.read(baseUrlProvider);
+  }
+
   @override
   Widget build(BuildContext context) {
     return  Container(
@@ -76,11 +83,14 @@ class _DigitalIDCardState extends ConsumerState<DigitalIDCard> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           CircleAvatar(
-            backgroundImage: widget.intern.avatar != null
-                ? NetworkImage("http://192.168.1.4:3000/${widget.intern.avatar}")
+
+            backgroundImage: widget.intern.avatar != null ?
+
+                  NetworkImage("${baseUrl}/${widget.intern.avatar}")
                 : const AssetImage("assets/images/pfp.png") as ImageProvider,
             radius: 60,
           ),
+          Container(width: 1,height: 100,color: AppColors.textMuted,),
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -106,7 +116,7 @@ class _DigitalIDCardState extends ConsumerState<DigitalIDCard> {
                     try {
                       var request = http.MultipartRequest(
                         "PUT",
-                        Uri.parse("http://192.168.1.4:3000/intern/$userId/picture"),
+                        Uri.parse("${baseUrl}/intern/$userId/picture"),
                       );
 
                       request.files.add(
