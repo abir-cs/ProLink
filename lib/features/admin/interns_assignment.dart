@@ -171,7 +171,7 @@ Widget internAssignmentRow(
                     radius: 22,
                     backgroundImage: intern.avatar != null ?
 
-                    NetworkImage("http://192.168.1.4:3000/${intern.avatar!.replaceAll('\\', '/')}")
+                    NetworkImage("http://192.168.130.3:3000/${intern.avatar!.replaceAll('\\', '/')}")
                         : const AssetImage("assets/images/pfp.png") as ImageProvider,
                   ),
                   const SizedBox(width: 14),
@@ -203,7 +203,7 @@ Widget internAssignmentRow(
                               final cv =
                               intern.cv!.replaceAll('\\', '/');
                               final uri = Uri.parse(
-                                "http://192.168.1.4:3000/$cv",
+                                "http://192.168.130.3:3000/$cv",
                               );
 
                               final success = await launchUrl(

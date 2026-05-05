@@ -182,7 +182,7 @@ Widget internValidationRow(
                     backgroundImage:
                         intern.avatar != null
                             ? NetworkImage(
-                              "http://192.168.1.4:3000/${intern.avatar!.replaceAll('\\', '/')}",
+                              "http://192.168.130.3:3000/${intern.avatar!.replaceAll('\\', '/')}",
                             )
                             : const AssetImage("assets/images/pfp.png")
                                 as ImageProvider,
@@ -215,7 +215,7 @@ Widget internValidationRow(
                             onTap: () async {
                               final cv = intern.cv!.replaceAll('\\', '/');
                               final uri = Uri.parse(
-                                "http://192.168.1.4:3000/$cv",
+                                "http://192.168.130.3:3000/$cv",
                               );
 
                               await launchUrl(

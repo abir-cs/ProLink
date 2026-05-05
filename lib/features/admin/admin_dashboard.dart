@@ -25,7 +25,6 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
     super.initState();
     loadData();
   }
-
   Future<void> loadData() async {
     validate = await InternService.fetchPendingInterns();
     assign = await InternService.fetchInternsnotAssignedToMentor();
@@ -91,7 +90,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(title: const Text("Admin Dashboard")),
-      
+
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Stack(
@@ -299,14 +298,33 @@ class _UploadButton extends StatelessWidget {
   }
 }
 
-class PendingInternsCard extends StatelessWidget {
+class PendingInternsCard extends StatefulWidget {
   const PendingInternsCard({super.key});
 
+  @override
+  State<PendingInternsCard> createState() => _PendingInternsCardState();
+}
+
+class _PendingInternsCardState extends State<PendingInternsCard> {
+  late Future<List<Intern>> _internsFuture;
+  @override
+  void initState() {
+    super.initState();
+    _internsFuture = InternService.fetchPendingInterns();
+  }
+  Future<void> loadData() async {
+    setState(() {
+      _internsFuture = InternService.fetchPendingInterns();
+    });
+  }
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
         Navigator.pushNamed(context, AppRoutes.iv);
+        setState(() {
+
+        });
       },
       child: Container(
         padding: const EdgeInsets.all(20),
@@ -326,7 +344,7 @@ class PendingInternsCard extends StatelessWidget {
             const SizedBox(height: 10),
 
             FutureBuilder<List<Intern>>(
-              future: InternService.fetchPendingInterns(),
+              future: _internsFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -380,9 +398,25 @@ class PendingInternsCard extends StatelessWidget {
   }
 }
 
-class InternsToAssignCard extends StatelessWidget {
+class InternsToAssignCard extends StatefulWidget {
   const InternsToAssignCard({super.key});
 
+  @override
+  State<InternsToAssignCard> createState() => _InternsToAssignCardState();
+}
+
+class _InternsToAssignCardState extends State<InternsToAssignCard> {
+  late Future<List<Intern>> _internsFuture;
+  @override
+  void initState() {
+    super.initState();
+    _internsFuture = InternService.fetchInternsnotAssignedToMentor();
+  }
+  Future<void> loadData() async {
+    setState(() {
+      _internsFuture = InternService.fetchInternsnotAssignedToMentor();
+    });
+  }
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -407,7 +441,7 @@ class InternsToAssignCard extends StatelessWidget {
             const SizedBox(height: 10),
 
             FutureBuilder<List<Intern>>(
-              future: InternService.fetchInternsnotAssignedToMentor(),
+              future: _internsFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -470,7 +504,7 @@ Widget _internRow(Intern intern) {
           radius: 16,
           backgroundImage: intern.avatar != null ?
 
-          NetworkImage("http://192.168.1.6:3000/${intern.avatar!.replaceAll('\\', '/')}")
+          NetworkImage("http://192.168.130.3:3000/${intern.avatar!.replaceAll('\\', '/')}")
               : const AssetImage("assets/images/pfp.png") as ImageProvider,
         ),
         const SizedBox(width: 10),
