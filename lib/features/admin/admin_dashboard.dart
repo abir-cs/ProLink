@@ -66,16 +66,26 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
     return results;
   }
 
-  void openIntern(SearchResult item) {
+  Future<void> openIntern(SearchResult item) async {
     if (item.source == "validate") {
-      Navigator.pushNamed(context, AppRoutes.iv, arguments: item.intern);
-    } else if(item.source == "assign") {
-      Navigator.pushNamed(context, AppRoutes.isa, arguments: item.intern);
+      await Navigator.pushNamed(context, AppRoutes.iv, arguments: item.intern);
+    } else if (item.source == "assign") {
+      await Navigator.pushNamed(context, AppRoutes.isa, arguments: item.intern);
+    } else {
+      await Navigator.pushNamed(context, AppRoutes.ai, arguments: item.intern);
     }
-    else{
-      Navigator.pushNamed(context, AppRoutes.ai, arguments: item.intern);
+
+    // 🔁 Reload everything after coming back
+    await loadData();
+
+    // 🔁 Re-run search if user typed something
+    if (query.isNotEmpty) {
+      setState(() {
+        results = searchInterns(query, validate, assign);
+      });
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
