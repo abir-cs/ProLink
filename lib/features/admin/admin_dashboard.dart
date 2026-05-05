@@ -1,23 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as ref;
+import 'package:pro_link/features/providers.dart';
 import '../../core/app_colors.dart';
 import '../../routes/routes.dart';
 import '../intern/workid.dart';
 import 'intern_service.dart';
 
-class AdminDashboard extends StatefulWidget {
+class AdminDashboard extends ConsumerStatefulWidget {
   const AdminDashboard({super.key});
 
   @override
-  State<AdminDashboard> createState() => _AdminDashboardState();
+  ConsumerState<AdminDashboard> createState() => _AdminDashboardState();
 }
 
-class _AdminDashboardState extends State<AdminDashboard> {
+class _AdminDashboardState extends ConsumerState<AdminDashboard> {
   String query = "";
 
   List<Intern> validate = [];
   List<Intern> assign = [];
+  List<Intern> assigned = [];
   List<SearchResult> results = [];
-
+  bool isLoading = true;
   @override
   void initState() {
     super.initState();
@@ -27,6 +31,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   Future<void> loadData() async {
     validate = await InternService.fetchPendingInterns();
     assign = await InternService.fetchInternsnotAssignedToMentor();
+    assigned = await InternService.fetchAssignedInterns();
     setState(() {});
   }
 
@@ -52,19 +57,29 @@ class _AdminDashboardState extends State<AdminDashboard> {
       }
     }
 
+    for (final i in assigned) {
+      if ("${i.name} ${i.lname}".toLowerCase().contains(q)) {
+        results.add(SearchResult(intern: i, source: "assigned"));
+      }
+    }
+
     return results;
   }
 
   void openIntern(SearchResult item) {
     if (item.source == "validate") {
       Navigator.pushNamed(context, AppRoutes.iv, arguments: item.intern);
-    } else {
+    } else if(item.source == "assign") {
       Navigator.pushNamed(context, AppRoutes.isa, arguments: item.intern);
+    }
+    else{
+      Navigator.pushNamed(context, AppRoutes.ai, arguments: item.intern);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(title: const Text("Admin Dashboard")),
       body: Padding(
@@ -93,21 +108,22 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
                             gradient: AppGradients.primary,
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(18),
                           ),
                           child: const Row(
                             children: [
                               Icon(
                                 Icons.admin_panel_settings_sharp,
-                                size: 30,
-                                color: AppColors.textSecondary,
+                                size: 28,
+                                color: AppColors.cardDark,
                               ),
                               SizedBox(width: 10),
                               Text(
                                 "Create Admin",
                                 style: TextStyle(
-                                  color: AppColors.textPrimary,
-                                  fontSize: 18,
+                                  color: AppColors.cardDark,
+                                  fontSize: 16,
+                                    fontWeight: FontWeight.bold
                                 ),
                               ),
                             ],
@@ -126,21 +142,22 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
                             gradient: AppGradients.primary,
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(18),
                           ),
                           child: const Row(
                             children: [
                               Icon(
                                 Icons.person_add_alt_1,
-                                size: 30,
-                                color: AppColors.textSecondary,
+                                size: 28,
+                                color: AppColors.cardDark,
                               ),
                               SizedBox(width: 10),
                               Text(
                                 "Create Mentor",
                                 style: TextStyle(
-                                  color: AppColors.textPrimary,
-                                  fontSize: 18,
+                                  color: AppColors.cardDark,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold
                                 ),
                               ),
                             ],
@@ -152,44 +169,53 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 ),
                 SizedBox(height: 10),
                 _UploadButton(),
-                SizedBox(height: 20),
+                SizedBox(height: 15),
                 Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: const [
-                        PendingInternsCard(),
-                        SizedBox(height: 20),
-                        InternsToAssignCard(),
-                      ],
-                    ),
+                  child: Column(
+                    children: [
+                      SingleChildScrollView(
+                        child: Column(
+                          children: const [
+                            PendingInternsCard(),
+                            SizedBox(height: 10),
+                            InternsToAssignCard(),
+                          ],
+                        ),
+                      ),
+
+                    ],
                   ),
                 ),
+
               ],
             ),
             if (query.isNotEmpty && results.isNotEmpty)
               Positioned(
-                top: 70, // adjust depending on search bar position
+                top: 60,
                 left: 20,
                 right: 20,
                 child: Material(
-                  elevation: 10,
+                  elevation: 5,
                   borderRadius: BorderRadius.circular(12),
                   color: AppColors.cardDark,
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: results.length,
-                    itemBuilder: (context, index) {
-                      final item = results[index];
+                  child: SizedBox(
+                    height: 300,
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: results.length,
+                      itemBuilder: (context, index) {
+                        final item = results[index];
 
-                      return ListTile(
-                        title: Text(
-                          "${item.intern.name} ${item.intern.lname}",
-                          style: const TextStyle(color: AppColors.textPrimary),
-                        ),
-                        subtitle: Text(item.source),
-                        onTap: () => openIntern(item),
-                      );
-                    },
+                        return ListTile(
+                          title: Text(
+                            "${item.intern.name} ${item.intern.lname}",
+                            style: const TextStyle(color: AppColors.textPrimary),
+                          ),
+                          subtitle: Text(item.source),
+                          onTap: () => openIntern(item),
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
@@ -432,7 +458,10 @@ Widget _internRow(Intern intern) {
       children: [
         CircleAvatar(
           radius: 16,
-          backgroundImage: AssetImage(intern.avatar ?? 'assets/images/pfp.png'),
+          backgroundImage: intern.avatar != null ?
+
+          NetworkImage("http://192.168.1.4:3000/${intern.avatar!.replaceAll('\\', '/')}")
+              : const AssetImage("assets/images/pfp.png") as ImageProvider,
         ),
         const SizedBox(width: 10),
         Text(
@@ -724,6 +753,7 @@ class _CreateScheduleDialogState extends State<CreateScheduleDialog> {
                                     context: context,
                                     builder: (context) {
                                       return AlertDialog(
+                                        backgroundColor: AppColors.cardLight,
                                         title: const Text(
                                           "Schedule already exists",
                                         ),
@@ -735,14 +765,6 @@ class _CreateScheduleDialogState extends State<CreateScheduleDialog> {
                                             ),
                                             const SizedBox(height: 10),
                                             // Placeholder schedule preview button
-                                            TextButton(
-                                              onPressed: () {
-                                                // later you can show full schedule page
-                                              },
-                                              child: const Text(
-                                                "View current schedule",
-                                              ),
-                                            ),
                                           ],
                                         ),
                                         actions: [

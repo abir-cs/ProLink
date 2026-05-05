@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pro_link/features/admin/intern_service.dart';
+import '../../routes/routes.dart';
 import '../intern/workid.dart';
 import '../../core/app_colors.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -13,17 +14,17 @@ class InternsAssignment extends StatefulWidget {
 }
 
 class _InternsAssignmentState extends State<InternsAssignment> {
-  late ScrollController controller;
+
+  final ScrollController _scrollController = ScrollController();
+  int? highlightedIndex;
 
   @override
   void initState() {
     super.initState();
-    controller = ScrollController();
   }
 
   @override
   void dispose() {
-    controller.dispose();
     super.dispose();
   }
   @override
@@ -37,11 +38,9 @@ class _InternsAssignmentState extends State<InternsAssignment> {
 
   @override
   Widget build(BuildContext context) {
-    final Intern? selected =
-    ModalRoute.of(context)!.settings.arguments as Intern?;
-    final ScrollController controller = ScrollController();
+    final selectedIntern = ModalRoute.of(context)!.settings.arguments as Intern?;
     return Scaffold(
-      appBar: AppBar(title: Text("Interns to Validate")),
+      appBar: AppBar(title: Text("Interns to Assign")),
       body: Padding(
         padding: const EdgeInsets.all(0),
         child: Container(
@@ -92,23 +91,57 @@ class _InternsAssignmentState extends State<InternsAssignment> {
                         );
                       }
                       final data = snapshot.data ?? [];
+                      final targetIndex = selectedIntern == null
+                          ? -1
+                          : data.indexWhere((i) => i.id == selectedIntern!.id);
                       if (data.isEmpty) {
-                        return const Center(child: Text("No pending interns"));
+                        return const Center(child: Text("All interns are assigned"));
                       }
+                      if (targetIndex != -1) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) async {
+                          await _scrollController.animateTo(
+                            targetIndex * 90.0, // better if fixed row height
+                            duration: const Duration(milliseconds: 500),
+                            curve: Curves.easeInOut,
+                          );
+
+                          setState(() {
+                            highlightedIndex = targetIndex;
+                          });
+
+                          Future.delayed(const Duration(milliseconds: 900), () {
+                            if (mounted) {
+                              setState(() {
+                                highlightedIndex = null;
+                              });
+                            }
+                          });
+                        });
+                      }
+
                       return ListView.builder(
                         itemCount: data.length,
+                        controller: _scrollController,
                         itemBuilder: (context, index) {
+                          final isHighlighted = highlightedIndex == index;
                           return internAssignmentRow(data[index], context, (
                             mentor,
                           ) {
                             setState(() {});
-                          });
+                          },isHighlighted );
                         },
                       );
                     },
                   ),
                 ),
               ),
+              SizedBox(height: 10),
+              TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, AppRoutes.ai);
+                },
+                child: Text("See assigned interns"),
+              )
             ],
           ),
         ),
@@ -119,123 +152,172 @@ class _InternsAssignmentState extends State<InternsAssignment> {
 }
 
 Widget internAssignmentRow(
-  Intern intern,
-  BuildContext context,
-  Function(Mentor mentor) onAssigned,
-) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 10),
-    child: Column(
-      children: [
-        Row(
-          children: [
-            /// Avatar + Info
-            Expanded(
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 22,
-                    backgroundImage: AssetImage(
-                      intern.avatar ?? 'assets/images/pfp.png',
+    Intern intern,
+    BuildContext context,
+    Function(Mentor mentor) onAssigned,
+    bool isHighlighted,
+    ) {
+  return TweenAnimationBuilder<double>(
+    tween: Tween(begin: 1.0, end: isHighlighted ? 1.0 : 1.0),
+    duration: const Duration(milliseconds: 350),
+    curve: Curves.easeOutBack,
+    builder: (context, scale, child) {
+      return Transform.scale(
+        scale: scale,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+          margin: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isHighlighted
+                ? AppColors.primarySoft.withOpacity(0.15)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 300),
+            opacity: isHighlighted ? 1.0 : 0.92,
+            child: child,
+          ),
+        ),
+      );
+    },
+
+    // 👇 YOUR ORIGINAL UI (UNCHANGED)
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              /// Avatar + Info
+              Expanded(
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 22,
+                      backgroundImage: intern.avatar != null ?
+
+                      NetworkImage("http://192.168.1.4:3000/${intern.avatar!.replaceAll('\\', '/')}")
+                          : const AssetImage("assets/images/pfp.png") as ImageProvider,
                     ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "${intern.name} ${intern.lname}",
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          intern.email,
-                          style: TextStyle(color: Colors.white70, fontSize: 13),
-                        ),
-                        const SizedBox(height: 6),
-                        GestureDetector(
-                          onTap: () async {
-                            final uri = Uri.parse(
-                              "http://192.168.1.4:3000/uploads/cv/cv.pdf", //to change later
-                            );
-
-                            final success = await launchUrl(
-                              uri,
-                              mode: LaunchMode.platformDefault,
-                            );
-
-                            if (!success) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("Could not open CV"),
-                                ),
-                              );
-                            }
-                          },
-                          child: const Text(
-                            "View CV",
-                            style: TextStyle(
-                              color: AppColors.primarySoft,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              decoration: TextDecoration.underline,
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "${intern.name} ${intern.lname}",
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            if (intern.mentor != null) ...[
-              Text(
-                "Assigned",
-                style: TextStyle(
-                  color: AppColors.primarySoft,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ] else ...[
-              GestureDetector(
-                onTap: () async {
-                  final result = await showDialog(
-                    context: context,
-                    builder: (_) => AssignInternDialog(intern: intern),
-                  );
+                          const SizedBox(height: 4),
+                          Text(
+                            intern.email,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
 
-                  if (result != null) {
-                    intern.mentor = result;
-                    onAssigned(result);
-                  }
-                },
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: AppColors.primarySoft.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(6),
+                          if (intern.cv != null) ...[
+                            GestureDetector(
+                              onTap: () async {
+                                final cv =
+                                intern.cv!.replaceAll('\\', '/');
+                                final uri = Uri.parse(
+                                  "http://192.168.1.4:3000/$cv",
+                                );
+
+                                final success = await launchUrl(
+                                  uri,
+                                  mode: LaunchMode.platformDefault,
+                                );
+
+                                if (!success) {
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(
+                                    const SnackBar(
+                                      content:
+                                      Text("Could not open CV"),
+                                    ),
+                                  );
+                                }
+                              },
+                              child: const Text(
+                                "View CV",
+                                style: TextStyle(
+                                  color: AppColors.primarySoft,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  decoration:
+                                  TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                          ]
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              if (intern.mentor != null) ...[
+                Text(
+                  "Assigned",
+                  style: TextStyle(
+                    color: AppColors.primarySoft,
+                    fontWeight: FontWeight.w600,
                   ),
-                  child: Text(
-                    'Assign',
-                    style: TextStyle(
-                      color: AppColors.primarySoft,
-                      fontWeight: FontWeight.w500,
+                ),
+              ] else ...[
+                GestureDetector(
+                  onTap: () async {
+                    final result = await showDialog(
+                      context: context,
+                      builder: (_) =>
+                          AssignInternDialog(intern: intern),
+                    );
+
+                    if (result != null) {
+                      intern.mentor = result;
+                      onAssigned(result);
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color:
+                      AppColors.primarySoft.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Text(
+                      'Assign',
+                      style: TextStyle(
+                        color: AppColors.primarySoft,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ],
-          ],
-        ),
-        const SizedBox(height: 12),
-        Divider(color: Colors.white.withOpacity(0.05), height: 1),
-      ],
+          ),
+          const SizedBox(height: 12),
+          Divider(
+            color: Colors.white.withOpacity(0.05),
+            height: 1,
+          ),
+        ],
+      ),
     ),
   );
 }

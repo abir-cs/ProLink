@@ -1,9 +1,21 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:http/http.dart' as ref;
+import '../providers.dart';
 import '/features/intern/workid.dart';
+import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:flutter/rendering.dart';
+import '../../core/app_colors.dart';
+import '../../routes/routes.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers.dart';
+import 'package:http/http.dart' as http;
 
 class InternService {
+
   static Future<List<Intern>> fetchPendingInterns() async {
+
     final response = await http.get(
       Uri.parse('http://192.168.1.4:3000/interns/pending'),
     );
@@ -47,9 +59,23 @@ class InternService {
     }
   }
 
+
   static Future<List<Intern>> fetchInternsnotAssignedToMentor() async {
     final response = await http.get(
       Uri.parse('http://192.168.1.4:3000/interns/waitingassignment'),
+    );
+
+    if (response.statusCode == 200) {
+      List data = jsonDecode(response.body);
+
+      return data.map((json) => Intern.fromJson(json)).toList();
+    } else {
+      throw Exception("Failed to load interns");
+    }
+  }
+  static Future<List<Intern>> fetchAssignedInterns() async {
+    final response = await http.get(
+      Uri.parse('http://192.168.1.4:3000/interns/assigned'),
     );
 
     if (response.statusCode == 200) {
@@ -82,6 +108,29 @@ class InternService {
       return data.map((json) => Mentor.fromJson(json)).toList();
     } else {
       throw Exception("Failed to load mentors");
+    }
+  }
+  static Future<Mentor> fetchMentorFromId(int id) async {
+    final response = await http.get(
+      Uri.parse('http://192.168.1.4:3000/mentors/$id'),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return Mentor.fromJson(data);
+    } else {
+      throw Exception("Failed to get mentor");
+    }
+  }
+  static Future<Department> fetchDepartmentFromId(int id) async {
+    final response = await http.get(
+      Uri.parse('http://192.168.1.4:3000/departments/$id'),
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return Department.fromJson(data);
+    } else {
+      throw Exception("Failed to get department");
     }
   }
 
@@ -152,6 +201,18 @@ class InternService {
       return data["exists"] == true;
     } else {
       throw Exception("Failed to check schedule");
+    }
+  }
+  static Future<String> fetchAdminName(int id) async {
+    final response = await http.get(
+      Uri.parse('http://192.168.1.4:3000/admin/$id'),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return "${data['fname']} ${data['lname']}";
+    } else {
+      throw Exception("Failed to load admin");
     }
   }
 }

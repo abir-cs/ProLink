@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pro_link/features/admin/assigned_interns.dart';
 import 'package:pro_link/features/admin/create_admin.dart';
 import 'package:pro_link/features/admin/create_mentor.dart';
 import 'package:pro_link/features/admin/interns_assignment.dart';
@@ -30,6 +31,7 @@ class AppRoutes {
   static const isa ='/admin/interns_assignment';
   static const ca ='/admin/create_admin';
   static const cm ='/admin/create_mentor';
+  static const ai ='/admin/assigned_interns';
 
   static Map<String, WidgetBuilder> routes = {
     login: (context) => const LoginScreen(),
@@ -46,5 +48,7 @@ class AppRoutes {
     atf:(context)=> const AddTrainingPage(),
     ca:(context)=> const CreateAdminScreen(),
     cm:(context)=> const CreateMentorScreen(),
+    ai:(context)=> const AssignedInterns(),
   };
+
 }

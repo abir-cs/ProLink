@@ -7,6 +7,7 @@ import '../providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 class Intern {
   final int id;
+  final int? age;
   final String? avatar;
   final String name;
   final String lname;
@@ -18,6 +19,7 @@ class Intern {
 
   Intern({
     required this.id,
+    required this.age,
     required this.avatar,
     required this.name,
     required this.lname,
@@ -31,13 +33,14 @@ class Intern {
   factory Intern.fromJson(Map<String, dynamic> json) {
     return Intern(
       id: json["intern_id"],
+      age: json["age"],
       avatar: json["picture_url"],
       name: json["fname"],
       lname: json["lname"],
       email: json["email"],
       status: json["status"],
-      department: json["department_name"],
-      mentor: json["mentor_fname"],
+      department: json["department_id"]?.toString(),
+      mentor: json["mentor_id"]?.toString(),
       cv: json["cv"],
     );
   }
