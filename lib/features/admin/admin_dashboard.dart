@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart' as ref;
-import 'package:pro_link/features/providers.dart';
 import '../../core/app_colors.dart';
 import '../../routes/routes.dart';
 import '../intern/workid.dart';
@@ -91,7 +89,9 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
   Widget build(BuildContext context) {
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(title: const Text("Admin Dashboard")),
+      
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Stack(
@@ -470,7 +470,7 @@ Widget _internRow(Intern intern) {
           radius: 16,
           backgroundImage: intern.avatar != null ?
 
-          NetworkImage("http://192.168.1.4:3000/${intern.avatar!.replaceAll('\\', '/')}")
+          NetworkImage("http://192.168.1.6:3000/${intern.avatar!.replaceAll('\\', '/')}")
               : const AssetImage("assets/images/pfp.png") as ImageProvider,
         ),
         const SizedBox(width: 10),

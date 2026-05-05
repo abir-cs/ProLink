@@ -63,6 +63,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
           onPressed: () async {
             final email = emailController.text.trim();
             final password = passwordController.text.trim();
+            final baseUrl = ref.read(baseUrlProvider);
 
             if (email.isEmpty || password.isEmpty) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -73,7 +74,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
 
             try {
               final response = await http.post(
-                Uri.parse("http://192.168.1.4:3000/login"), // emulator -> localhost
+                Uri.parse("${baseUrl}/login"), // emulator -> localhost
                 headers: {"Content-Type": "application/json"},
                 body: jsonEncode({
                   "email": email,
