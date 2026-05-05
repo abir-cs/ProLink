@@ -44,7 +44,7 @@ class _CreateMentorScreenState extends State<CreateMentorScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse("http://192.168.1.4:3000/mentor/create"),
+        Uri.parse("http://192.168.1.6:3000/mentor/create"),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "email": emailController.text.trim(),
